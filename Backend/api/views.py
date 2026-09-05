@@ -1,5 +1,9 @@
-from django.shortcuts import render
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
+
+@api_view(["GET"])
 def home(request):
-    return render(request, "hello.html")
-# Create your views here.
+    return Response({
+        "message": "Hello from Django!"
+    })
