@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,6 +51,10 @@ INSTALLED_APPS = [
     #third party apps
     'corsheaders',
     'rest_framework',
+    "drf_yasg",
+    # 'rest_framework_simplejwt',
+    #below is same as above but extra advantage is it is destroy the refresh token at the time user logout before it naturally expire protecting form stoling of refresh token
+    'rest_framework_simplejwt.token_blacklist'
 
 
 ]
@@ -153,4 +160,18 @@ MAILERS = {
 }
 
 
+
 #media url and file
+MEDIA_URL="/media/"
+MEDIA_ROOT=BASE_DIR/'media'
+
+#jwt configuration setting
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
