@@ -21,6 +21,8 @@ class ProfileSerializer(serializers.ModelSerializer):
     #     return data
 
 class MyTokenObtainPariSerializer(TokenObtainPairSerializer):
+    #it will only reveal the payload data like fullname email user etc while decrypting but will not send this at forntend 
+    #so inorder to send the payload data along with refresh token and access token we have to user the validate method and send data via that
     @classmethod
     def get_token(cls, user):
         token=super().get_token(user)
@@ -32,6 +34,14 @@ class MyTokenObtainPariSerializer(TokenObtainPairSerializer):
         except:
             token['vendor_id']=0
         return token
+    
+    def validate(self, attrs):
+        data=super().validate(attrs)
+        data["id"]=self.user.id
+        data["full_name"]=self.user.full_name
+        data["email"]=self.user.email
+        data["phone"]=self.user.phone
+        return data
     
 class RegisterSerializer(serializers.ModelSerializer):
 

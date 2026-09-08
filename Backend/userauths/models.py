@@ -6,7 +6,6 @@ import uuid
 def generate_profile_id():
     return uuid.uuid4().hex[:10]
 
-
 class User(AbstractUser):
 
     username = models.CharField(
@@ -31,6 +30,8 @@ class User(AbstractUser):
         null=True,
         blank=True
     )
+    
+    otp=models.CharField(max_length=10,null=True, blank=True)
 
     USERNAME_FIELD = "email"
 

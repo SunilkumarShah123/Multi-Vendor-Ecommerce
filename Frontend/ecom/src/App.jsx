@@ -1,24 +1,23 @@
-import { useEffect, useState } from "react";
-
-function App() {
-    const [message, setMessage] = useState("");
-
-    useEffect(() => {
-        fetch("http://127.0.0.1:8000/api/home/")
-            .then((response) => response.json())
-            .then((data) => {
-                setMessage(data.message);
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-    }, []);
-
-    return (
-        <div className="container mt-5">
-            <h1>{message}</h1>
-        </div>
-    );
+import Home from './Pages/Home'
+import Login from './Pages/auth/Login'
+import RegisterUser from './Pages/auth/RegisterUser'
+import Dashboard from './Pages/auth/Dashboard'
+import {Route,Routes} from "react-router-dom"
+import LogOut from './Pages/auth/LogOut'
+import PasswrodResetEmail from './Pages/auth/PasswrodResetEmail'
+import PasswordReset from './Pages/auth/PasswordReset'
+const App = () => {
+  return <>
+    <Routes>
+        <Route  path="/" element={<Home/>} />
+        <Route path="login/" element={<Login/>} />
+        <Route path="register/" element={<RegisterUser/>} />
+        <Route path="dashboard/" element={<Dashboard/>} />
+        <Route path="logout/" element={<LogOut/>}/>
+        <Route path="password-reset-email/" element={<PasswrodResetEmail/>}/>
+        <Route path="password-reset/" element={<PasswordReset/>} />
+    </Routes>
+  </>
 }
 
-export default App;
+export default App

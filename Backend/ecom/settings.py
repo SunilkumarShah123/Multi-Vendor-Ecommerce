@@ -175,3 +175,29 @@ SIMPLE_JWT = {
 
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+#new mailing setup in django
+
+MAILERS = {
+    "default": {
+        "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        "OPTIONS": {
+            "host": "smtp.gmail.com",
+            "port": 587,
+            "username": "nirpatidevi123@gmail.com",
+            "password": "xkcx isec cuyk iqrp",
+            "use_tls": True,
+        },
+    },
+}
+
+DEFAULT_FROM_EMAIL = "nirpatidevi123@gmail.com"
+
+
+#it was valid in pervious django version now now before 6.1
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.gmail.com"
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = "..."
+# EMAIL_HOST_PASSWORD = "..."

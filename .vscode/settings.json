@@ -1,0 +1,7 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python.defaultInterpreterPath": "C:\\Users\\sunil\\OneDrive - padmashree International College\\Desktop\\Udemy Multi Vendor\\Code\\Backend\\myenv\\Scripts\\python.exe",
+    "python.analysis.extraPaths": [
+        "C:\\Users\\sunil\\OneDrive - padmashree International College\\Desktop\\Udemy Multi Vendor\\Code\\Backend"
+    ]
+}
