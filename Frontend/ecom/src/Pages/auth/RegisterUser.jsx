@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from "react";
 
+import { useState, useEffect } from "react";
 import { Register } from "../../utils/auth";
-
-import { useNavigate } from "react-router-dom";
-
+import { useNavigate, Link } from "react-router-dom";
 import userAuthStore from "../../store/auth";
 
 const RegisterUser = () => {
   const navigate = useNavigate();
   const isLoggedIn = userAuthStore((state) => state.isLoggedIn());
-
+  const loading=userAuthStore( state => state.loading)
   const [formData, setForm] = useState({
     full_name: "",
     email: "",
@@ -66,66 +64,103 @@ const RegisterUser = () => {
     }
   };
 
-  return (
+
+return (
+  <div className="container">
+    <h1 className="my-5 text-center">Register Page</h1>
     <form
       onSubmit={handleSubmit}
-      className="d-flex flex-column my-4 justify-content-center align-items-center"
+      className="d-flex flex-column my-4 mx-auto"
+      style={{ maxWidth: "500px" }}
     >
-      <label htmlFor="full_name">Full Name:</label>
+      <label htmlFor="full_name" className="form-label">
+        Full Name:
+      </label>
       <input
         type="text"
         id="full_name"
         name="full_name"
+        className="form-control mb-3"
         placeholder="Enter Your Full Name"
         value={formData.full_name}
         onChange={handleChange}
       />
 
-      <label htmlFor="email">Email:</label>
+      <label htmlFor="email" className="form-label">
+        Email:
+      </label>
       <input
         type="email"
         id="email"
         name="email"
+        className="form-control mb-3"
         placeholder="Enter Your Email"
         value={formData.email}
         onChange={handleChange}
       />
 
-      <label htmlFor="phone">Phone:</label>
+      <label htmlFor="phone" className="form-label">
+        Phone:
+      </label>
       <input
         type="tel"
         id="phone"
         name="phone"
+        className="form-control mb-3"
         placeholder="Enter Your Number"
         value={formData.phone}
         onChange={handleChange}
       />
 
-      <label htmlFor="password">Password:</label>
+      <label htmlFor="password" className="form-label">
+        Password:
+      </label>
       <input
         type="password"
         id="password"
         name="password"
+        className="form-control mb-3"
         placeholder="Enter Your Password"
         value={formData.password}
         onChange={handleChange}
       />
 
-      <label htmlFor="password2">Confirm Password:</label>
+      <label htmlFor="password2" className="form-label">
+        Confirm Password:
+      </label>
       <input
         type="password"
         id="password2"
         name="password2"
+        className="form-control mb-3"
         placeholder="Enter Your Confirm Password"
         value={formData.password2}
         onChange={handleChange}
       />
 
-      <button type="submit" className="btn btn-danger">
-        Register
-      </button>
+      {loading ? (<button className="btn btn-success mt-3">
+        <span className="spinner-border spinner-border-sm me-2"></span>
+        Registering ...
+      </button>):(<button className="btn btn-danger mt-3" type="submit">
+          Register
+      </button>)
+      }
+
+      <div className="mt-3 text-center">
+        <span>Already have an account?</span>
+        <Link
+          className="text-decoration-none ms-1"
+          onClick={() => navigate("/login")}
+        >
+          Login !
+        </Link>
+      </div>
     </form>
-  );
+  </div>
+);
+
+
 };
 
 export default RegisterUser;
+

@@ -61,7 +61,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ["full_name", "email", "phone", "password", "password2"]
 
     def validate(self, attrs):
-
+        
         if attrs["password"] != attrs["password2"]:
             raise serializers.ValidationError(
                 "Confirm Password and Password must be same"

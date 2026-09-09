@@ -1,4 +1,5 @@
 import Home from './Pages/Home'
+import {Toaster} from "react-hot-toast"
 import Login from './Pages/auth/Login'
 import RegisterUser from './Pages/auth/RegisterUser'
 import Dashboard from './Pages/auth/Dashboard'
@@ -8,6 +9,7 @@ import PasswrodResetEmail from './Pages/auth/PasswrodResetEmail'
 import PasswordReset from './Pages/auth/PasswordReset'
 const App = () => {
   return <>
+    <Toaster position='top-right'/>
     <Routes>
         <Route  path="/" element={<Home/>} />
         <Route path="login/" element={<Login/>} />

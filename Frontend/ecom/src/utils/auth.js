@@ -1,7 +1,7 @@
 
 import userAuthStore from "../store/auth";
 import api from "./axios";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 
 export const login = async (email, password) => {
@@ -12,21 +12,47 @@ export const login = async (email, password) => {
     });
 
     if (status === 200) {
-      await setAuthUser(data.access, data.refresh);
-      alert("User Login Successfully");
+      // Create user object
+      const userData = {
+        id: data.id,
+        full_name: data.full_name,
+        email: data.email,
+      };
+
+      // Store user in Zustand
+      await setAuthUser(
+        data.access,
+        data.refresh,
+        userData
+      );
+
+      console.log("User data:", userData);
+
+      // Return user data to Login.jsx
+      return {
+        data,
+        user: userData,
+        error: null,
+      };
     }
 
     return {
-      data: data,
-      error: null,
+      data: null,
+      user: null,
+      error: "Login failed",
     };
+
   } catch (error) {
     return {
       data: null,
-      error: error.response?.data?.message || "Something went wrong",
+      user: null,
+      error:
+        error.response?.data?.message ||
+        "Something went wrong",
     };
   }
 };
+
 
 export const Register = async (
   full_name,
@@ -37,11 +63,11 @@ export const Register = async (
 ) => {
   try {
     const response = await api.post("register/", {
-      full_name: full_name,
-      email: email,
-      phone: phone,
-      password: password,
-      password2: password2,
+      full_name,
+      email,
+      phone,
+      password,
+      password2,
     });
 
     alert("User Register Successfully!");
@@ -51,16 +77,20 @@ export const Register = async (
     const { data } = response;
 
     return {
-      data: data,
+      data,
       error: null,
     };
+
   } catch (error) {
     return {
       data: null,
-      error: error.response?.data?.message || "Something went wrong",
+      error:
+        error.response?.data?.message ||
+        "Something went wrong",
     };
   }
 };
+
 
 export const logOut = async () => {
   Cookies.remove("access_token");
@@ -68,6 +98,7 @@ export const logOut = async () => {
 
   userAuthStore.getState().setUser(null);
 };
+
 
 export const setUser = async () => {
   try {
@@ -88,8 +119,12 @@ export const setUser = async () => {
         response.data.refresh || refreshToken
       );
     } else {
-      await setAuthUser(accessToken, refreshToken);
+      await setAuthUser(
+        accessToken,
+        refreshToken
+      );
     }
+
   } catch (error) {
     Cookies.remove("access_token");
     Cookies.remove("refresh_token");
@@ -101,14 +136,21 @@ export const setUser = async () => {
   }
 };
 
-export const getRefreshToken= async (refresh_token)=>{
-     const response= await api.post("refresh/", {
-        refresh: refresh_token,
-      })
-      return response
-}
 
-export const setAuthUser = async (access_token, refresh_token) => {
+export const getRefreshToken = async (refresh_token) => {
+  const response = await api.post("refresh/", {
+    refresh: refresh_token,
+  });
+
+  return response;
+};
+
+
+export const setAuthUser = async (
+  access_token,
+  refresh_token,
+  user_data
+) => {
   try {
     Cookies.set("access_token", access_token, {
       expires: 7,
@@ -118,24 +160,22 @@ export const setAuthUser = async (access_token, refresh_token) => {
       expires: 7,
     });
 
-    const decoded = jwtDecode(access_token);
-
-    const user = decoded.user ?? null;
-
-    if (user) {
-      userAuthStore.getState().setUser(user);
-    } else {
-      userAuthStore.getState().setUser(null);
+    // Store user information in Zustand
+    if (user_data) {
+      userAuthStore.getState().setUser(user_data);
     }
 
-    userAuthStore.getState().setLoading(false);
   } catch (error) {
-    console.error("Failed to set authenticated user:", error);
+    console.error(
+      "Failed to set authenticated user:",
+      error
+    );
 
     userAuthStore.getState().setUser(null);
     userAuthStore.getState().setLoading(false);
   }
 };
+
 
 export const isAccessTokenExpired = (access_token) => {
   if (access_token) {
@@ -146,4 +186,3 @@ export const isAccessTokenExpired = (access_token) => {
 
   return true;
 };
-

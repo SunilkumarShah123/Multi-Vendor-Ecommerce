@@ -1,101 +1,127 @@
-
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import apiInstance from "../../utils/axios";
 
 const PasswordReset = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-    const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
+  const otp = searchParams.get("otp");
+  const uuid = searchParams.get("uuid");
 
-    const otp = searchParams.get("otp");
-    const uuid = searchParams.get("uuid");
+  const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const [password, setPassword] = useState("");
-    const [password2, setPassword2] = useState("");
+  const handleSubmission = async (e) => {
+    e.preventDefault();
 
-    const handleSubmission = async (e) => {
-        e.preventDefault();
+    if (!otp || !uuid) {
+      return toast.error("Invalid or expired reset link");
+    }
 
-        if (!otp || !uuid) {
-            return alert("Invalid or expired reset link");
-        }
+    if (!password || !password2) {
+      return toast.error("Please enter password and confirm password");
+    }
 
-        if (!password || !password2) {
-            return alert("Please enter password and confirm password");
-        }
+    if (password !== password2) {
+      return toast.error("Password and Confirm Password must be same");
+    }
 
-        if (password !== password2) {
-            return alert("Password and Confirm Password must be same");
-        }
+    setLoading(true);
 
-        try {
+    try {
+      const response = await apiInstance.post("reset-password/", {
+        uuid,
+        otp,
+        password,
+      });
 
-            const response = await apiInstance.post(
-                "reset-password/",
-                {
-                    uuid: uuid,
-                    otp: otp,
-                    password: password,
-                }
-            );
+      toast.success(response.data.msg || "Password reset successfully");
 
-            alert(response.data.msg);
+      setPassword("");
+      setPassword2("");
 
-            navigate("/login");
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+    } catch (error) {
+      console.log(error);
 
-        } catch (error) {
+      toast.error(
+        error.response?.data?.error ||
+          error.response?.data?.msg ||
+          "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            console.log(error);
+  return (
+    <div className="container">
+      <div className="row justify-content-center">
+        <div className="col-12 col-md-6 col-lg-5">
+          <h2 className="text-center my-4">Password Reset Form</h2>
 
-            alert(
-                error.response?.data?.error ||
-                error.response?.data?.msg ||
-                "Something went wrong"
-            );
-        }
-    };
+          <form onSubmit={handleSubmission}>
+            <div className="mb-3">
+              <label htmlFor="password" className="form-label">
+                Password:
+              </label>
 
-    return (
-        <>
-            <h2>Password Reset Form</h2>
+              <input
+                type="password"
+                name="password"
+                id="password"
+                className="form-control"
+                placeholder="Enter Your New Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+              />
+            </div>
 
-            <form onSubmit={handleSubmission}>
+            <div className="mb-3">
+              <label htmlFor="password2" className="form-label">
+                Confirm Password:
+              </label>
 
-                <label htmlFor="password">
-                    Password:
-                </label>
+              <input
+                type="password"
+                name="password2"
+                id="password2"
+                className="form-control"
+                placeholder="Confirm Your New Password"
+                value={password2}
+                onChange={(e) => setPassword2(e.target.value)}
+                disabled={loading}
+              />
+            </div>
 
-                <input
-                    type="password"
-                    name="password"
-                    onChange={(e) => setPassword(e.target.value)}
-                    id="password"
-                    value={password}
-                />
-
-                <label htmlFor="password2">
-                    Confirm Password:
-                </label>
-
-                <input
-                    type="password"
-                    name="password2"
-                    onChange={(e) => setPassword2(e.target.value)}
-                    id="password2"
-                    value={password2}
-                />
-
-                <button
-                    className="btn btn-success"
-                    type="submit"
-                >
-                    Submit
-                </button>
-
-            </form>
-        </>
-    );
+            <button
+              className="btn btn-success w-100"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    aria-hidden="true"
+                  ></span>
+                  Resetting...
+                </>
+              ) : (
+                "Submit"
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default PasswordReset;
