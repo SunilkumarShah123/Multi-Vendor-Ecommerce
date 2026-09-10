@@ -16,7 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from api.views import home
 
 #api swagger documentation
 from rest_framework import permissions
