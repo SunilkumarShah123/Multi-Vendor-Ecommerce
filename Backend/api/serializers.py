@@ -95,7 +95,7 @@ class CartOrderItemSerializer(serializers.ModelSerializer):
         model = CartOrderItem
         fields = [
             "id", "order", "course", "teacher", "tax_fee", "total", "initial_total", "saved",
-            "coupons", "applied_coupon", "oid", "created_date", "updated_date",
+            "coupons", "applied_coupon", "order_item_id", "created_date", "updated_date",
             "order_id", "payment_status",
         ]
 
@@ -108,7 +108,7 @@ class CartOrderSerializer(serializers.ModelSerializer):
         fields = [
             "id", "student", "teachers", "sub_total", "tax_fee", "total", "initial_total",
             "saved", "payment_status", "full_name", "email", "country", "coupons",
-            "stripe_session_id", "oid", "created_date", "updated_date", "order_items",
+            "stripe_session_id", "order_id", "created_date", "updated_date", "order_items",
         ]
 
 
@@ -198,6 +198,13 @@ class CouponSerializer(serializers.ModelSerializer):
         model = Coupon
         fields = ["id", "teacher", "used_by", "code", "discount", "active", "created_date", "updated_date"]
 
+class CouponApplySerializer(serializers.ModelSerializer):
+
+    order_id = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = Coupon
+        fields = ["order_id", "code"]
 
 class WishlistSerializer(serializers.ModelSerializer):
     class Meta:

@@ -214,7 +214,7 @@ class Question_Answer(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=1000, null=True, blank=True)
-    qa_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    qa_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890",editable=False)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
@@ -236,7 +236,7 @@ class Question_Answer_Message(models.Model):
     question = models.ForeignKey(Question_Answer, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     message = models.TextField(null=True, blank=True)
-    qam_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    qam_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890",editable=False)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
@@ -257,8 +257,9 @@ class Cart(models.Model):
     tax_fee = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
     total = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
     country = models.CharField(max_length=100, null=True, blank=True)
+    #cart id is not set to unique because one cart can contain multple cart items and when ever it will created will store the new changing unique cart id making problem during fetchiing the cart itmes becuase every cart items wil have differetn cart_id
     cart_id = ShortUUIDField(
-        unique=True, length=6, max_length=20, alphabet="1234567890"
+         length=6, max_length=20, alphabet="1234567890",editable=False
     )
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
@@ -299,7 +300,7 @@ class CartOrder(models.Model):
 
     stripe_session_id = models.CharField(max_length=1000, null=True, blank=True)
 
-    oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    order_id = ShortUUIDField( length=6, max_length=20, alphabet="1234567890",editable=False)
 
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
@@ -311,7 +312,7 @@ class CartOrder(models.Model):
         return CartOrderItem.objects.filter(order=self)
 
     def __str__(self):
-        return self.oid
+        return self.order_id
 
 
 class CartOrderItem(models.Model):
@@ -324,11 +325,11 @@ class CartOrderItem(models.Model):
     total = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
     initial_total = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
     saved = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    coupons = models.ForeignKey(
-        "api.Coupon", on_delete=models.SET_NULL, null=True, blank=True
+    coupons = models.ManyToManyField(
+        "api.Coupon", null=True, blank=True
     )
     applied_coupon = models.BooleanField(default=False)
-    oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    order_item_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890",editable=False)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
@@ -336,13 +337,13 @@ class CartOrderItem(models.Model):
         ordering = ["-created_date"]
 
     def order_id(self):
-        return f"Order ID #{self.order.oid}"
+        return f"Order Item ID #{self.order.order_item_id}"
 
     def payment_status(self):
         return f"{self.order.payment_status}"
 
     def __str__(self):
-        return self.oid
+        return self.order_item_id
 
 
 class Certificate(models.Model):

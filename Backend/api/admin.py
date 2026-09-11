@@ -83,7 +83,7 @@ class CartOrderAdmin(admin.ModelAdmin):
 	list_display = (
 		"id", "student", "display_teachers", "sub_total", "tax_fee", "total", "initial_total",
 		"saved", "payment_status", "full_name", "email", "country", "stripe_session_id",
-		"oid", "created_date", "updated_date",
+		"order_id", "created_date", "updated_date",
 	)
 
 	@admin.display(description="teachers")
@@ -93,10 +93,26 @@ class CartOrderAdmin(admin.ModelAdmin):
 
 @admin.register(CartOrderItem)
 class CartOrderItemAdmin(admin.ModelAdmin):
-	list_display = (
-		"id", "order", "course", "teacher", "tax_fee", "total", "initial_total", "saved",
-		"coupons", "applied_coupon", "oid", "created_date", "updated_date",
-	)
+
+    list_display = [
+        "id",
+        "order",
+        "course",
+        "teacher",
+        "tax_fee",
+        "total",
+        "initial_total",
+        "saved",
+        "display_coupons",
+        "applied_coupon",
+        "created_date",
+        "updated_date",
+    ]
+
+    def display_coupons(self, obj):
+        return ", ".join(
+            c.title for c in obj.coupons.all()
+        )
 
 
 @admin.register(Certificate)
