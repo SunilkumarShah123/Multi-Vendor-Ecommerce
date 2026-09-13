@@ -20,7 +20,8 @@ urlpatterns = [
    path('course/create-order/<cart_id>/',CreateOrderAPIView.as_view(),name="create-order"),
    path('course/order-checkout/<order_id>/',CheckOutAPIView.as_view(),name="order-checkout"),
    path('course/apply-coupon/',CuponApplyAPIView.as_view(),name="apply-coupon"),
-   
+   path('payment/khalti/initiate/',KhaltiInitiateAPIView.as_view(),name="khalti-initiate"),
+   path('payment/khalti/verify/',KhaltiVerifyAPIView.as_view(),name="khalti-verify"),
    
 ]
 

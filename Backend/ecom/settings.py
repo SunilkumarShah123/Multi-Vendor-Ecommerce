@@ -12,11 +12,14 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
 
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -47,6 +50,7 @@ INSTALLED_APPS = [
     'customer',
     'vendor',
     'userauths',
+    'khalti_payment',
 
     #third party apps
     'corsheaders',
@@ -192,6 +196,17 @@ MAILERS = {
 }
 
 DEFAULT_FROM_EMAIL = "nirpatidevi123@gmail.com"
+
+KHALTI_SECRET_KEY = os.getenv("KHALTI_SECRET_KEY", "")
+KHALTI_API_URL = os.getenv("KHALTI_API_URL", "https://dev.khalti.com/api/v2")
+KHALTI_RETURN_URL = os.getenv(
+    "KHALTI_RETURN_URL",
+    "http://127.0.0.1:8000/api/payment/khalti/verify/",
+)
+KHALTI_WEBSITE_URL = os.getenv(
+    "KHALTI_WEBSITE_URL",
+    "http://127.0.0.1:5173",
+)
 
 
 #it was valid in pervious django version now now before 6.1
