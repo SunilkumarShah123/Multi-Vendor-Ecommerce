@@ -1,12 +1,13 @@
-
+import Pagewrapper from "../Pagewrapper";
 import { useState, useEffect } from "react";
 import { Register } from "../../utils/auth";
 import { useNavigate, Link } from "react-router-dom";
 import userAuthStore from "../../store/auth";
+import toast from "react-hot-toast";
 
 const RegisterUser = () => {
   const navigate = useNavigate();
-  const isLoggedIn = userAuthStore((state) => state.isLoggedIn());
+  const isLoggedIn = userAuthStore((state) => state.isLoggedIn);
   const loading=userAuthStore( state => state.loading)
   const [formData, setForm] = useState({
     full_name: "",
@@ -35,7 +36,7 @@ const RegisterUser = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigate("/");
+      navigate("/home");
     }
   }, [isLoggedIn, navigate]);
 
@@ -43,10 +44,11 @@ const RegisterUser = () => {
     e.preventDefault();
     userAuthStore.getState().setLoading(true);
 
-    if (!isLoggedIn) {
+    try {
+      if (isLoggedIn) return;
+
       if (formData.password !== formData.password2) {
-        alert("Passwords do not match");
-        userAuthStore.getState().setLoading(false);
+        toast.error("Passwords do not match");
         return;
       }
 
@@ -58,14 +60,25 @@ const RegisterUser = () => {
         formData.password2
       );
 
-      userAuthStore.getState().setLoading(false);
+      if (error) {
+        toast.error(error);
+        return;
+      }
+
+      toast.success("Registration successful. You are now logged in.");
       handleResetFrom();
-      alert(error);
+      navigate("/dashboard");
+    } catch {
+      toast.error("Unable to connect to the server");
+    } finally {
+      userAuthStore.getState().setLoading(false);
     }
   };
 
 
 return (
+  <Pagewrapper>
+
   <div className="container">
     <h1 className="my-5 text-center">Register Page</h1>
     <form
@@ -138,7 +151,7 @@ return (
         onChange={handleChange}
       />
 
-      {loading ? (<button className="btn btn-success mt-3">
+      {loading ? (<button className="btn btn-success mt-3" type="submit" disabled>
         <span className="spinner-border spinner-border-sm me-2"></span>
         Registering ...
       </button>):(<button className="btn btn-danger mt-3" type="submit">
@@ -157,6 +170,7 @@ return (
       </div>
     </form>
   </div>
+  </Pagewrapper>
 );
 
 

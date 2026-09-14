@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import Pagewrapper from "../Pagewrapper";
 import toast from "react-hot-toast";
 import apiInstance from "../../utils/axios";
 
@@ -60,7 +61,8 @@ const PasswordReset = () => {
   };
 
   return (
-    <div className="container">
+   <Pagewrapper>
+     <div className="container">
       <div className="row justify-content-center">
         <div className="col-12 col-md-6 col-lg-5">
           <h2 className="text-center my-4">Password Reset Form</h2>
@@ -121,6 +123,7 @@ const PasswordReset = () => {
         </div>
       </div>
     </div>
+   </Pagewrapper>
   );
 };
 

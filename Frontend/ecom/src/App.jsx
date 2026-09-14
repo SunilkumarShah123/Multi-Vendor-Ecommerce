@@ -7,11 +7,18 @@ import {Route,Routes} from "react-router-dom"
 import LogOut from './Pages/auth/LogOut'
 import PasswrodResetEmail from './Pages/auth/PasswrodResetEmail'
 import PasswordReset from './Pages/auth/PasswordReset'
+import { useEffect } from 'react'
+import { setUser } from './utils/auth'
 const App = () => {
+  useEffect(() => {
+    setUser()
+  }, [])
+
   return <>
     <Toaster position='top-right'/>
     <Routes>
-        <Route  path="/" element={<Home/>} />
+      <Route path="/" element={<Home/>} />
+        <Route  path="/home" element={<Home/>} />
         <Route path="login/" element={<Login/>} />
         <Route path="register/" element={<RegisterUser/>} />
         <Route path="dashboard/" element={<Dashboard/>} />

@@ -4,7 +4,7 @@ import userAuthStore from "../store/auth"
 
 //it is component dedicated to protect the certain page or route so that only authenticated or logged in user can acces the protected page or route else redirect to login page
 const PrivateRoute = ({children}) => {
-    const isLoggedIn= userAuthStore( state => state.isLoggedIn)()//IIFE(Immediately Invoked Function Expression.)
+    const isLoggedIn= userAuthStore(state => state.isLoggedIn)
   return isLoggedIn ? <>{children}</>:<Navigate to="/login"/>
 }
 

@@ -1,4 +1,6 @@
 import { Children, useEffect, useState } from "react";
+import Header from "../Pages/Base/Header";
+import Footer from "../Pages/Base/Footer";
 import { setUser } from "../utils/auth";
 //purpose of this wraper component is to first load the user information before the depending component loads it ui so that at the time of render ui can get the user information becacuse if we first load the ui and then then the user informatio it may take time from backend and till then ui will show no user or error or invalid user information
 const MainWrapper = ({children}) => {
@@ -14,7 +16,9 @@ const MainWrapper = ({children}) => {
 
   return <>
   {/* if loading is true the set page to null means no rendering any page else if loading is false that means user information has been fetch to lets the children component like dashboard to be rendered*/}
+      <Header/>
      {loading?null:Children}
+     <Footer/>
   </>
 };
 

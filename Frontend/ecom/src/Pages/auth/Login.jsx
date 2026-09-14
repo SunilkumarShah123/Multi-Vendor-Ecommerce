@@ -1,5 +1,6 @@
-import style from "../../Css/Login.module.css";
+import style from "../../Css/auth/Login.module.css";
 import { useState, useEffect } from "react";
+import Pagewrapper from "../Pagewrapper";
 import { login } from "../../utils/auth";
 import toast from "react-hot-toast";
 import { FaGoogle } from "react-icons/fa";
@@ -9,7 +10,7 @@ import userAuthStore from "../../store/auth";
 const Login = () => {
   const navigate = useNavigate();
   const loading = userAuthStore((state) => state.loading);
-  const isLoggedIn = userAuthStore((state) => state.isLoggedIn());
+  const isLoggedIn = userAuthStore((state) => state.isLoggedIn);
 
   const [formData, setForm] = useState({
     email: "",
@@ -39,14 +40,18 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.email || !formData.password) {
+      toast.error("Please enter your email and password");
+      return;
+    }
+
     userAuthStore.getState().setLoading(true);
 
-    if (!isLoggedIn) {
+    try {
+      if (isLoggedIn) return;
+
       const { user, error } = await login(formData.email, formData.password);
 
-      userAuthStore.getState().setLoading(false);
-
-      // Handle error FIRST
       if (error) {
         toast.error(error);
         return;
@@ -63,15 +68,20 @@ const Login = () => {
 
       // Navigate after successful login
       navigate("/dashboard");
+    } catch {
+      toast.error("Unable to connect to the server");
+    } finally {
+      userAuthStore.getState().setLoading(false);
     }
   };
 
   return (
     <>
-      <div className="container">
+     <Pagewrapper>
+       <div className="container">
         <h1 className="text-center my-5">Login page</h1>
         <form
-          className={`d-flex flex-column w-50 gap-2 mx-auto`}
+          className={`${style.loginForm} d-flex flex-column w-50 gap-2 mx-auto`}
           onSubmit={handleSubmit}
         >
           <label className="form-label" htmlFor="email">
@@ -105,7 +115,7 @@ const Login = () => {
                 className="spinner-border spinner-border-sm me-2"
                 role="status"
               ></span>
-              Loging...
+              Logging in...
             </button>
           ) : (
             <button type="submit" className="btn btn-danger mt-3">
@@ -120,7 +130,7 @@ const Login = () => {
             >
               Forget Password ?
             </Link>
-            <Link className="text-decoration-none ">Register !</Link>
+            <Link className="text-decoration-none" onClick={()=>( navigate('/register'))} >Register !</Link>
           </div>
           <div className="text-center">
             <span className="d-block fw-bolder fs-4 text-danger mb-1">or</span>
@@ -130,6 +140,7 @@ const Login = () => {
           </div>
         </form>
       </div>
+     </Pagewrapper>
     </>
   );
 };

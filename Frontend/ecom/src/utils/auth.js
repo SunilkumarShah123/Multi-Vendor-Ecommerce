@@ -4,6 +4,27 @@ import api from "./axios";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 
+//method for handling error dynamically came form fornt end becase sometime error direclty can be string , some time we have to fetch error form data.message or data.detail or sometime error can be in object of array and we have to flatten the multiple array and then return the first error 
+/* like this 
+{
+  email: ["Enter a valid email"],
+  password: ["Password is too short"]
+} */
+const getErrorMessage = (error, fallback = "Something went wrong") => {
+  const data = error.response?.data;
+
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.detail) return data.detail;
+
+  if (data && typeof data === "object") {
+    const firstError = Object.values(data).flat(Infinity)[0];
+    if (firstError) return String(firstError);
+  }
+
+  return fallback;
+};
+
 export const login = async (email, password) => {
   try {
     const { data, status } = await api.post("token/", {
@@ -46,9 +67,7 @@ export const login = async (email, password) => {
     return {
       data: null,
       user: null,
-      error:
-        error.response?.data?.message ||
-        "Something went wrong",
+      error: getErrorMessage(error, "Email or password is invalid"),
     };
   }
 };
@@ -70,9 +89,14 @@ export const Register = async (
       password2,
     });
 
-    alert("User Register Successfully!");
+    const loginResult = await login(email, password);
 
-    await login(email, password);
+    if (loginResult.error) {
+      return {
+        data: null,
+        error: loginResult.error,
+      };
+    }
 
     const { data } = response;
 
@@ -84,9 +108,7 @@ export const Register = async (
   } catch (error) {
     return {
       data: null,
-      error:
-        error.response?.data?.message ||
-        "Something went wrong",
+      error: getErrorMessage(error),
     };
   }
 };
@@ -95,7 +117,7 @@ export const Register = async (
 export const logOut = async () => {
   Cookies.remove("access_token");
   Cookies.remove("refresh_token");
-
+  console.log("User logout successfully")
   userAuthStore.getState().setUser(null);
 };
 
@@ -111,17 +133,27 @@ export const setUser = async () => {
       return;
     }
 
+    const tokenData = jwtDecode(accessToken);
+    const userData = {
+      id: tokenData.user_id,
+      full_name: tokenData.full_name,
+      email: tokenData.email,
+      username: tokenData.username,
+    };
+
     if (isAccessTokenExpired(accessToken)) {
       const response = await getRefreshToken(refreshToken);
 
       await setAuthUser(
         response.data.access,
-        response.data.refresh || refreshToken
+        response.data.refresh || refreshToken,
+        userData
       );
     } else {
       await setAuthUser(
         accessToken,
-        refreshToken
+        refreshToken,
+        userData
       );
     }
 
@@ -181,7 +213,7 @@ export const isAccessTokenExpired = (access_token) => {
   if (access_token) {
     const decoded = jwtDecode(access_token);
 
-    return decoded.expires < Date.now() / 1000;
+    return decoded.exp < Date.now() / 1000;
   }
 
   return true;

@@ -1,25 +1,22 @@
-import React, { useEffect } from 'react'
-import userAuthStore from '../../store/auth'
-import { logOut } from '../../utils/auth'
-import { useNavigate } from 'react-router-dom'
-const LogOut = () => {
-  const navigate=useNavigate()
-  const isLoggedIn=userAuthStore( state => state.isLoggedIn)
-  const handleLogOut= ()=>{
-    logOut()
-    useEffect(()=>{
-        if(!isLoggedIn()){
-            navigate('dashboard/')
-        }
-    })
-  }
-  return 
-    <>
-    <button onClick={handleLogOut} className="btn btn-danger">
-        Log Out
-    </button>
-    </>
-  
-}
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { logOut } from "../../utils/auth";
+import toast from "react-hot-toast";
 
-export default LogOut
+const LogOut = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleLogout = async () => {
+      await logOut();
+      toast.success("You have been logged out");
+      navigate("/home", { replace: true });
+    };
+
+    handleLogout();
+  }, [navigate]);
+
+  return null;
+};
+
+export default LogOut;

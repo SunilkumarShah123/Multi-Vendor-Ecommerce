@@ -1,0 +1,29 @@
+.footer {
+  min-height: 300px;
+  background-color: #303030;
+}
+
+.footer ul{
+    margin-left: 15px;
+    & li{
+         margin:10px 0px;
+    }
+}
+
+.footer h1{
+    margin-bottom: 17px;
+    font-size: 27px;
+}
+
+.footer{
+    padding: 0px 40px;
+}
+
+.footer hr{
+    border: 2px solid rgb(248, 249, 247)!important;
+}
+
+.footer a{
+    text-decoration: none ;
+    color: white;
+}

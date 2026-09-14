@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import apiInstance from "../../utils/axios";
 import toast from "react-hot-toast";
-
+import Pagewrapper from "../Pagewrapper";
 const PasswordResetEmail = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,7 +47,8 @@ const PasswordResetEmail = () => {
 
   return (
     <>
-      <div className="container">
+      <Pagewrapper>
+        <div className="container">
         {/* Title */}
         <h1 className="text-center my-5">
           Password Reset Email
@@ -103,6 +104,7 @@ const PasswordResetEmail = () => {
           )}
         </form>
       </div>
+      </Pagewrapper>
     </>
   );
 };
