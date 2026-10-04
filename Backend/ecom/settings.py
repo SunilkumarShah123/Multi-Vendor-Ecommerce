@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+from decouple import config
 
 
 
@@ -26,10 +27,9 @@ load_dotenv(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!7nw2ncff00msd3av+kx-fgcht11n6dr9)bk=aehu@i=222p@e'
-
+SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG')
 
 ALLOWED_HOSTS = []
 
@@ -107,14 +107,13 @@ WSGI_APPLICATION = 'ecom.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "lms_db",
-        "USER": "postgres",
-        "PASSWORD": "curious",
-        "HOST": "localhost",
-        "PORT": "5432",
+        "NAME": config("DB_NAME"),
+        "USER": config("DB_USER"),
+        "PASSWORD": config("DB_PASSWORD"),
+        "HOST": config("DB_HOST"),
+        "PORT": config("DB_PORT"),
     }
 }
-
 
 AUTH_USER_MODEL= "userauths.User"
 # Password validation
@@ -191,16 +190,16 @@ MAILERS = {
     "default": {
         "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
         "OPTIONS": {
-            "host": "smtp.gmail.com",
-            "port": 587,
-            "username": "nirpatidevi123@gmail.com",
-            "password": "xkcx isec cuyk iqrp",
-            "use_tls": True,
+            "host": config("EMAIL_HOST"),
+            "port": config("EMAIL_PORT", cast=int),
+            "username": config("EMAIL_HOST_USER"),
+            "password": config("EMAIL_HOST_PASSWORD"),
+            "use_tls": config("EMAIL_USE_TLS", cast=bool),
         },
     },
 }
 
-DEFAULT_FROM_EMAIL = "nirpatidevi123@gmail.com"
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
 
 KHALTI_SECRET_KEY = os.getenv("KHALTI_SECRET_KEY", "")
 KHALTI_API_URL = os.getenv("KHALTI_API_URL", "https://dev.khalti.com/api/v2")
