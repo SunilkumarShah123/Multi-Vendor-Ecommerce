@@ -52,9 +52,9 @@ class CategoryListAPIView(ListAPIView):
 
 class CourseListAPIView(ListAPIView):
     queryset = Course.objects.filter(
-        platform_status="published", teacher_course_status="published"
+        platform_status="Published", teacher_course_status="Published"
     )
-    serializer_class = CourseSerializer
+    serializer_class=CourseSerializer
     permission_classes = [AllowAny]
 
 
@@ -67,10 +67,12 @@ class CourseDetailAPIView(RetrieveAPIView):
 
     def get_object(self):
         slug = self.kwargs["slug"]
-        course = Course.objects.filter(
-            slug=slug, platform_status="published", teacher_course_status="published"
+        return get_object_or_404(
+            Course,
+            slug=slug,
+            platform_status="Published",
+            teacher_course_status="Published",
         )
-        return course
 
 
 class CartAPIView(CreateAPIView):
@@ -88,6 +90,8 @@ class CartAPIView(CreateAPIView):
 
         # Now fetching items one by one from databse
         course = Course.objects.filter(course_id=course_id).first()
+        print("course_id received:", course_id)
+        print("course object:", course)
 
         # some time if user is not authenticated it from forntend side user id might come undefined
         if user_id == "undefined":
@@ -107,7 +111,8 @@ class CartAPIView(CreateAPIView):
             tax_rate = 0
 
         # some time user may update the existing cart with updated information and code for that
-        cart = Cart.objects.filter(cart_id=cart_id, course_id=course_id)
+        cart = Cart.objects.filter(cart_id=cart_id, course__course_id=course_id).first()
+        print("existing cart",cart)
 
         if cart:
             cart.course = course
@@ -117,10 +122,11 @@ class CartAPIView(CreateAPIView):
             cart.tax_fee = Decimal(price) * Decimal(tax_rate)
             cart.country = country
             cart.cart_id = cart_id
+           
             cart.total = Decimal(cart.price) + Decimal(cart.tax_fee)
             cart.save()
             return Response(
-                {"message": "Cart Updated Successfully"}, status=status.HTTP_200_0K
+                {"message": "Cart Updated Successfully"}, status=status.HTTP_200_OK
             )
 
         # But sometime user may wanted to create new cart with cart infromation insteading of udating the existing cart so code for that
@@ -132,8 +138,10 @@ class CartAPIView(CreateAPIView):
                 tax_fee=Decimal(price) * Decimal(tax_rate),
                 country=country,
                 cart_id=cart_id,
+                
                 total=Decimal(price) + (Decimal(price) * Decimal(tax_rate)),
             )
+            print('cart_id',cart.cart_id)
         return Response(
             {"message": "Cart created successfully"}, status=status.HTTP_201_CREATED
         )
@@ -161,6 +169,7 @@ class SpecifiCartCartitemDelete(DestroyAPIView):
     def get_object(self):
         cart_id = self.kwargs["cart_id"]
         cart_object_pk = self.kwargs["item_id"]
+        print(f"cart id is {cart_id} and item_deleting_id is {cart_object_pk}")
         return Cart.objects.filter(cart_id=cart_id, id=cart_object_pk).first()
 
 
@@ -237,7 +246,7 @@ class CreateOrderAPIView(CreateAPIView):
         email = request.data["email"]
         country = request.data["country"]
         cart_id = request.data["cart_id"]
-        user_id = request.user.id
+        user_id = request.data["user_id"]
         user = User.objects.filter(id=user_id).first() if user_id else None
 
         # fetched the cart times
@@ -387,10 +396,10 @@ class KhaltiInitiateAPIView(CreateAPIView):
 
         return Response(response_data, status=status.HTTP_200_OK)
 
-
 class KhaltiVerifyAPIView(CreateAPIView):
     permission_classes = [AllowAny]
-
+    
+    
     def create(self, request, *args, **kwargs):
         return self._verify(request.data)
 

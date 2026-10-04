@@ -1,5 +1,5 @@
 from django.contrib import admin
-
+from .forms import CourseAdminForm
 from .models import (
 	Cart,
 	CartOrder,
@@ -38,8 +38,9 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-	list_display = (
-		"id", "category", "teacher", "title", "price", "language", "level",
+    form=CourseAdminForm
+    list_display = (
+		"id", "category", "teacher", "title","image", "price", "language", "level",
 		"platform_status", "teacher_course_status", "featured", "course_id",
 		"slug", "created_date", "updated_date",
 	)
@@ -53,7 +54,7 @@ class VariantAdmin(admin.ModelAdmin):
 @admin.register(VariantItem)
 class VariantItemAdmin(admin.ModelAdmin):
 	list_display = (
-		"id", "variant", "title", "file", "duration", "content_duration", "preview",
+		"id", "variant", "title", "varient_file", "duration", "content_duration", "preview",
 		"variant_item_id", "created_date", "updated_date",
 	)
 
@@ -140,7 +141,7 @@ class NoteAdmin(admin.ModelAdmin):
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
 	list_display = (
-		"id", "user", "course", "review", "rating", "repy", "active", "created_date", "updated_date",
+		"id", "user", "course", "review", "rating", "reply", "active", "created_date", "updated_date",
 	)
 
 

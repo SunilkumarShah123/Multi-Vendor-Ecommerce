@@ -25,6 +25,8 @@ from .models import (
 
 
 class VariantItemSerializer(serializers.ModelSerializer):
+    file = serializers.FileField(source="varient_file", read_only=True)
+
     class Meta:
         model = VariantItem
         fields = [
@@ -47,7 +49,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = [
-            "id", "user", "course", "review", "rating", "repy", "active",
+            "id", "user", "course", "review", "rating", "active",
             "created_date", "updated_date", "profile",
         ]
 
@@ -131,7 +133,7 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     students = EnrolledCourseSerializer(many=True, read_only=True)
-    curriculum = VariantItemSerializer(many=True, read_only=True)
+    curriculum = VariantSerializer(many=True, read_only=True)
     lectures = VariantItemSerializer(many=True, read_only=True)
     average_rating = serializers.FloatField(read_only=True, allow_null=True)
     rating_count = serializers.IntegerField(read_only=True)
@@ -145,6 +147,13 @@ class CourseSerializer(serializers.ModelSerializer):
             "featured", "course_id", "slug", "created_date", "updated_date", "students",
             "curriculum", "lectures", "average_rating", "rating_count", "reviews",
         ]
+
+        depth = 0
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        self.Meta.depth = 3 if request and request.method == "GET" else 0
 
 
 class TeacherSerializer(serializers.ModelSerializer):
@@ -170,13 +179,24 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = Cart
         fields = [
-            "id", "course", "user", "price", "tax_fee", "total", "country", "cart_id",
-            "created_date", "updated_date",
+            "id",
+            "course",
+            "user",
+            "price",
+            "tax_fee",
+            "total",
+            "country",
+            "cart_id",
+            "created_date",
+            "updated_date",
         ]
+        depth=3
 
+    
 
 class CertificateSerializer(serializers.ModelSerializer):
     class Meta:

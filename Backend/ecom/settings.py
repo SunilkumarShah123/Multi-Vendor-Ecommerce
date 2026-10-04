@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     "drf_yasg",
+    "django_ckeditor_5",
     # 'rest_framework_simplejwt',
     #below is same as above but extra advantage is it is destroy the refresh token at the time user logout before it naturally expire protecting form stoling of refresh token
     'rest_framework_simplejwt.token_blacklist'
@@ -104,9 +105,13 @@ WSGI_APPLICATION = 'ecom.wsgi.application'
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "lms_db",
+        "USER": "postgres",
+        "PASSWORD": "curious",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
 
@@ -216,3 +221,24 @@ KHALTI_WEBSITE_URL = os.getenv(
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = "..."
 # EMAIL_HOST_PASSWORD = "..."
+
+
+#ck editior configuration
+
+CKEDITOR_5_CONFIGS = {
+    "extends": {
+        "toolbar": [
+            "heading",
+            "|",
+            "bold",
+            "italic",
+            "link",
+            "bulletedList",
+            "numberedList",
+            "blockQuote",
+            "insertTable",
+            "undo",
+            "redo",
+        ],
+    },
+}

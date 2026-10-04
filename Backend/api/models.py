@@ -108,9 +108,11 @@ class Course(models.Model):
     # featuring me keeping this course highlighted or featured in home page
     featured = models.BooleanField(default=False)
     course_id = ShortUUIDField(
-        unique=True, length=6, max_length=20, alphabet="1234567890"
+        unique=True, length=6, max_length=20, alphabet="1234567890",editable=False
     )
-    slug = models.SlugField(unique=True, null=True, blank=True)
+    slug = models.SlugField(
+        max_length=255, unique=True, null=True, blank=True, editable=False
+    )
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
@@ -126,7 +128,7 @@ class Course(models.Model):
         return EnrolledCourse.objects.filter(course=self)
 
     def curriculum(self):
-        return VariantItem.objects.filter(variant__course=self)
+        return Variant.objects.filter(course=self)
 
     def lectures(self):
         return VariantItem.objects.filter(variant__course=self)
@@ -174,7 +176,7 @@ class VariantItem(models.Model):
     title = models.CharField(max_length=1000)
     description = models.TextField(null=True, blank=True)
     # stores the relative path of any pdf video image etc
-    file = models.FileField(upload_to="course-file")
+    varient_file = models.FileField(upload_to="course-file",null=True,blank=True)
     # stores the duration of audio vidoe in acutal calculaable interger based format in database so that further can be utilize in time calculation
     duration = models.DurationField(null=True, blank=True)
     # store the time of audio and video in text or string format in database
@@ -191,8 +193,8 @@ class VariantItem(models.Model):
         return f"{self.variant.title} - {self.title}"
 
     def save(self, *args, **kwargs):
-        if self.file:
-            targeted_video_clip = VideoFileClip(self.file.path)
+        if self.varient_file:
+            targeted_video_clip = VideoFileClip(self.varient_file.path)
             total_video_duration_in_seconds = targeted_video_clip.duration
             # storing the total video during second in actual time format in database
             self.duration = timedelta(seconds=(int(total_video_duration_in_seconds)))
@@ -208,6 +210,7 @@ class VariantItem(models.Model):
             self.content_duration = duration_in_text
 
             return super().save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
 
 class Question_Answer(models.Model):
@@ -261,6 +264,7 @@ class Cart(models.Model):
     cart_id = ShortUUIDField(
          length=6, max_length=20, alphabet="1234567890",editable=False
     )
+    print("cart_id",cart_id)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
@@ -430,13 +434,13 @@ class Review(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     review = models.TextField()
     rating = models.IntegerField(choices=RATING, default=None)
-    repy = models.CharField(null=True, blank=True, max_length=1000)
+    reply = models.CharField(null=True, blank=True, max_length=1000)
     active = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.title.course
+        return self.course.title
 
     def profile(self):
         return Profile.objects.get(user=self.user)
