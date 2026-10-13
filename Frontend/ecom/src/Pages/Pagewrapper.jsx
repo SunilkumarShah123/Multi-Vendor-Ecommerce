@@ -7,7 +7,7 @@ const Pagewrapper = ({ children }) => {
     <>
       <div className="page">
         <main className="main-content">
-          <Header />
+          <Header styel/>
           {children}
           <Footer />
         </main>

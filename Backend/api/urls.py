@@ -13,17 +13,16 @@ urlpatterns = [
    path('course/category/',CategoryListAPIView.as_view(),name="category-list"),
    path('course/course-list/',CourseListAPIView.as_view(),name="course-list"),
    path('course/course-detail/<slug>/',CourseDetailAPIView.as_view(),name="course-detail"),
+   path('search/',SearchCourseView.as_view(),name="search-course"),
    path('course/cart/',CartAPIView.as_view(),name="cart"),
    path('course/cart-list/<cart_id>/',SpecifiCartCartItemsListAPIView.as_view(),name="cart-list"),
    path('course/cart-object-delete/<cart_id>/<item_id>/',SpecifiCartCartitemDelete.as_view(),name="cart-object-delete"),
    path('course/cart-item-in-cart-total-statistic/<cart_id>/',CartItemsInSpecificCartCalculation.as_view(),name="cart-item-in-cart-total-statistic"),
-   path('course/create-order/',CreateOrderAPIView.as_view(),name="create-order"),
+   path('course/create-order/',CreateOrUpdateOrderAPIView.as_view(),name="create-order"),
    path('course/order-checkout/<order_id>/',CheckOutAPIView.as_view(),name="order-checkout"),
+   path('course/order-update/<order_id>/',CreateOrUpdateOrderAPIView.as_view(),name="order-update"),
    path('course/apply-coupon/',CuponApplyAPIView.as_view(),name="apply-coupon"),
    path('payment/khalti/initiate/',KhaltiInitiateAPIView.as_view(),name="khalti-initiate"),
    path('payment/khalti/verify/',KhaltiVerifyAPIView.as_view(),name="khalti-verify"),
    
 ]
-
-
-

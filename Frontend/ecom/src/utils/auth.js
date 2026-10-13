@@ -9,7 +9,11 @@ import Cookies from "js-cookie";
 {
   email: ["Enter a valid email"],
   password: ["Password is too short"]
-} */
+}
+  simply Look inside this API error, find the best human-readable message, and return it
+  
+*/
+
 const getErrorMessage = (error, fallback = "Something went wrong") => {
   const data = error.response?.data;
 

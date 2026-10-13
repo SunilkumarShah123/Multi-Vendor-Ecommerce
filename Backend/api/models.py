@@ -1,3 +1,4 @@
+from decimal import Decimal
 import math
 from datetime import timedelta
 from django.db import models
@@ -290,7 +291,9 @@ class CartOrder(models.Model):
     # contain origin total mount before applyling discount or cupon
     initial_total = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
     # cotains the saved amount after applying discount or cupon
-    saved = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
+    saved = models.DecimalField(
+        max_digits=12, default=Decimal("0.00"), decimal_places=2
+    )
 
     payment_status = models.CharField(choices=PAYMENT_STATUS, default="Processing")
 
@@ -328,7 +331,9 @@ class CartOrderItem(models.Model):
     tax_fee = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
     total = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
     initial_total = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    saved = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
+    saved = models.DecimalField(
+        max_digits=12, default=Decimal("0.00"), decimal_places=2
+    )
     coupons = models.ManyToManyField(
         "api.Coupon", null=True, blank=True
     )

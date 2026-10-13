@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import apiInstance from "../../utils/axios";
 import toast from "react-hot-toast";
 import Pagewrapper from "../Pagewrapper";

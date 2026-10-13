@@ -1,9 +1,21 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
 from unittest.mock import patch
 
-from .models import Cart, CartOrder, CartOrderItem, Category, Course, EnrolledCourse, Notification, Teacher
+from .models import (
+	Cart,
+	CartOrder,
+	CartOrderItem,
+	Category,
+	Course,
+	Coupon,
+	EnrolledCourse,
+	Notification,
+	Teacher,
+)
 from .views import finalize_paid_order
 
 
@@ -54,6 +66,146 @@ class PaidOrderFinalizationTests(TestCase):
 			).count(),
 			1,
 		)
+
+	def test_course_search_returns_matching_published_courses(self):
+		unpublished_course = Course.objects.create(
+			category=self.order_item.course.category,
+			teacher=self.teacher,
+			title="Django Draft",
+			platform_status="Drafted",
+		)
+
+		response = APIClient().get("/api/search/", {"query": "Django"})
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data), 1)
+		self.assertEqual(response.data[0]["slug"], self.order_item.course.slug)
+		self.assertNotEqual(response.data[0]["id"], unpublished_course.id)
+
+	def test_checkout_contact_update_updates_existing_order(self):
+		removed_course = Course.objects.create(
+			category=self.order_item.course.category,
+			teacher=self.teacher,
+			title="Removed course",
+			price="25.00",
+		)
+		removed_item = CartOrderItem.objects.create(
+			order=self.order,
+			course=removed_course,
+			teacher=self.teacher,
+			total="25.00",
+			initial_total="25.00",
+		)
+		Cart.objects.create(
+			course=self.order_item.course,
+			user=self.student,
+			price="100.00",
+			tax_fee="10.00",
+			total="110.00",
+			cart_id="123456",
+		)
+		client = APIClient()
+
+		response = client.patch(
+			f"/api/course/order-update/{self.order.order_id}/",
+			{
+				"full_name": "Updated Student",
+				"email": "updated@example.com",
+				"country": "Nepal",
+				"cart_id": "123456",
+			},
+			format="json",
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.order.refresh_from_db()
+		self.assertEqual(CartOrder.objects.count(), 1)
+		self.assertEqual(self.order.full_name, "Updated Student")
+		self.assertEqual(self.order.email, "updated@example.com")
+		self.assertEqual(self.order.country, "Nepal")
+		self.assertFalse(CartOrderItem.objects.filter(pk=removed_item.pk).exists())
+		self.assertEqual(list(self.order.order.values_list("course_id", flat=True)), [
+			self.order_item.course_id,
+		])
+		self.assertEqual(self.order.sub_total, 100)
+		self.assertEqual(self.order.tax_fee, 10)
+		self.assertEqual(self.order.total, 110)
+
+	def test_checkout_update_creates_new_order_item_with_decimal_saved_amount(self):
+		new_course = Course.objects.create(
+			category=self.order_item.course.category,
+			teacher=self.teacher,
+			title="New course",
+			price="50.00",
+		)
+		for course, price, tax_fee, total in (
+			(self.order_item.course, "100.00", "10.00", "110.00"),
+			(new_course, "50.00", "5.00", "55.00"),
+		):
+			Cart.objects.create(
+				course=course,
+				user=self.student,
+				price=price,
+				tax_fee=tax_fee,
+				total=total,
+				cart_id="654321",
+			)
+
+		response = APIClient().patch(
+			f"/api/course/order-update/{self.order.order_id}/",
+			{"cart_id": "654321"},
+			format="json",
+		)
+
+		self.assertEqual(response.status_code, 200)
+		new_item = CartOrderItem.objects.get(order=self.order, course=new_course)
+		self.assertEqual(new_item.saved, Decimal("0.00"))
+		self.order.refresh_from_db()
+		self.assertEqual(self.order.sub_total, Decimal("150.00"))
+		self.assertEqual(self.order.total, Decimal("165.00"))
+
+	def test_coupon_discount_reduces_subtotal_and_survives_checkout_update(self):
+		self.order.sub_total = Decimal("100.00")
+		self.order.tax_fee = Decimal("10.00")
+		self.order.total = Decimal("110.00")
+		self.order.initial_total = Decimal("110.00")
+		self.order.save()
+		self.order_item.tax_fee = Decimal("10.00")
+		self.order_item.total = Decimal("110.00")
+		self.order_item.initial_total = Decimal("110.00")
+		self.order_item.save()
+		Cart.objects.create(
+			course=self.order_item.course,
+			user=self.student,
+			price="100.00",
+			tax_fee="10.00",
+			total="110.00",
+			cart_id="coupon1",
+		)
+		Coupon.objects.create(code="SAVE10", discount=10, active=True)
+		client = APIClient()
+
+		coupon_response = client.post(
+			"/api/course/apply-coupon/",
+			{"order_id": self.order.order_id, "coupon": "SAVE10"},
+			format="json",
+		)
+
+		self.assertEqual(coupon_response.status_code, 201)
+		self.order.refresh_from_db()
+		self.assertEqual(self.order.sub_total, Decimal("90.00"))
+		self.assertEqual(self.order.total, Decimal("100.00"))
+
+		update_response = client.patch(
+			f"/api/course/order-update/{self.order.order_id}/",
+			{"cart_id": "coupon1"},
+			format="json",
+		)
+
+		self.assertEqual(update_response.status_code, 200)
+		self.order.refresh_from_db()
+		self.assertEqual(self.order.sub_total, Decimal("90.00"))
+		self.assertEqual(self.order.total, Decimal("100.00"))
 
 	def test_two_cart_items_complete_order_payment_and_finalization(self):
 		second_teacher_user = User.objects.create_user(

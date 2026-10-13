@@ -1,0 +1,59 @@
+
+.curiculum-section{
+    margin-top: 40px;
+
+}
+
+.nav-item .nav-link{
+    color: #0D6FFC;
+
+    &:hover{
+        color: #0D6FFC;
+    }
+}
+
+.social-media i{
+    margin-top: 5px;
+    color: white;
+    background-color: #0D6FFC;
+    border-radius: 3px;
+    padding: 2px 0px;
+
+}
+
+.tab-pane{
+    padding: 15px;
+}
+.card-img-top img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    object-position: center;
+    padding: 5px;
+    border-radius: 8px;
+    display: block;
+}
+.varient-item {
+    margin-bottom: -20px;
+}
+.varient-item i{
+    background-color:#DD3445;
+    color: white;
+    padding: 10px 20px 10px 10px;
+    border-radius: 4px;
+}
+
+.course-video-modal{
+    background-color: #F9F9FB;
+    text-align: center;
+    font-weight: bolder;
+    padding: 25px;
+}
+
+.modal-drop{
+
+    background-color: white;
+    & .dropdown-item{
+        color: black!important;
+    }
+}

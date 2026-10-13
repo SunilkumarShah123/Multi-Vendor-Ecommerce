@@ -5,15 +5,20 @@ from django.db import transaction
 from khalti_payment.views import KhaltiPaymentError, initiate_payment, verify_payment
 
 from .serializers import *
+from rest_framework.mixins import UpdateModelMixin
 from rest_framework.generics import (
     ListAPIView,
     RetrieveAPIView,
     CreateAPIView,
     DestroyAPIView,
 )
-from rest_framework.permissions import AllowAny
+
+from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError
+from django.db.models import Q
 from .models import *
 
 
@@ -203,7 +208,7 @@ class CartItemsInSpecificCartCalculation(RetrieveAPIView):
         return Response(data)
 
 
-class CreateOrderAPIView(CreateAPIView):
+class CreateOrUpdateOrderAPIView(CreateAPIView, UpdateModelMixin):
     """
                  STUDENT
                 │
@@ -239,6 +244,8 @@ class CreateOrderAPIView(CreateAPIView):
 
     serializer_class = CartOrderSerializer
     permission_classes = [AllowAny]
+    queryset = CartOrder.objects.all()
+    lookup_field = "order_id"
 
     def create(self, request, *args, **kwargs):
         # below informations to create order
@@ -284,6 +291,90 @@ class CreateOrderAPIView(CreateAPIView):
             status=status.HTTP_201_CREATED,
         )
 
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        order = serializer.instance
+        cart_id = self.request.data.get("cart_id")
+        if not cart_id:
+            raise ValidationError({"cart_id": "This field is required."})
+        if order.payment_status.lower() == "paid":
+            raise ValidationError({"detail": "A paid order cannot be edited."})
+
+        cart_items = list(
+            Cart.objects.filter(cart_id=cart_id).select_related(
+                "course", "course__teacher"
+            )
+        )
+        if not cart_items:
+            raise ValidationError({"cart_id": "Your cart is empty."})
+
+        with transaction.atomic():
+            existing_items = {
+                item.course_id: item for item in order.order.all()
+            }
+            cart_course_ids = {item.course_id for item in cart_items}
+
+            for course_id, order_item in existing_items.items():
+                if course_id not in cart_course_ids:
+                    order_item.delete()
+
+            updated_items = []
+            for cart_item in cart_items:
+                order_item = existing_items.get(cart_item.course_id)
+                if order_item is None:
+                    order_item = CartOrderItem.objects.create(
+                        order=order,
+                        course=cart_item.course,
+                        teacher=cart_item.course.teacher,
+                        tax_fee=cart_item.tax_fee,
+                        total=cart_item.total,
+                        initial_total=cart_item.total,
+                    )
+                else:
+                    order_item.course = cart_item.course
+                    order_item.teacher = cart_item.course.teacher
+                    order_item.tax_fee = cart_item.tax_fee
+                    order_item.initial_total = cart_item.total
+                    order_item.total = cart_item.total - order_item.saved
+                    order_item.save(
+                        update_fields=[
+                            "course",
+                            "teacher",
+                            "tax_fee",
+                            "initial_total",
+                            "total",
+                            "updated_date",
+                        ]
+                    )
+                updated_items.append(order_item)
+
+            serializer.save()
+            order.sub_total = sum(
+                (item.total - item.tax_fee for item in updated_items),
+                Decimal("0"),
+            )
+            order.tax_fee = sum(
+                (item.tax_fee for item in updated_items), Decimal("0")
+            )
+            order.initial_total = sum(
+                (item.initial_total for item in updated_items), Decimal("0")
+            )
+            order.total = sum(
+                (item.total for item in updated_items), Decimal("0")
+            )
+            order.teachers.set({item.teacher_id for item in updated_items})
+            order.save(
+                update_fields=[
+                    "sub_total",
+                    "tax_fee",
+                    "initial_total",
+                    "total",
+                    "updated_date",
+                ]
+            )
+
 
 class CheckOutAPIView(RetrieveAPIView):
     serializer_class = CartOrderSerializer
@@ -301,6 +392,7 @@ class CuponApplyAPIView(CreateAPIView):
 
         order_id = request.data["order_id"]
         coupon_code = request.data.get("code") or request.data.get("coupon")
+
         if not coupon_code:
             return Response(
                 {"detail": "Coupon code is required."},
@@ -314,7 +406,13 @@ class CuponApplyAPIView(CreateAPIView):
         order_items = CartOrderItem.objects.filter(order=order)
 
         # Find the existing coupon
-        coupon = Coupon.objects.get(code=coupon_code)
+        try:
+            coupon = Coupon.objects.get(code=coupon_code)
+        except Coupon.DoesNotExist:
+            return Response(
+            {"message": "Coupon doesn't exist or has expired"},
+        status=status.HTTP_404_NOT_FOUND,
+            )
 
         if coupon:
 
@@ -324,10 +422,13 @@ class CuponApplyAPIView(CreateAPIView):
                 # Check whether this coupon is already on this item
                 if not i.coupons.filter(id=coupon.id).exists():
 
-                    discount = i.total * coupon.discount / 100
+                    discount = (
+                        (i.total - i.tax_fee)
+                        * Decimal(coupon.discount)
+                        / Decimal("100")
+                    ).quantize(Decimal("0.01"))
 
                     i.total -= discount
-                    i.price -= discount
                     i.saved += discount
                     i.applied_coupon = True
 
@@ -353,12 +454,6 @@ class CuponApplyAPIView(CreateAPIView):
             return Response(
                 {"message": "cupon applied successfully"},
                 status=status.HTTP_201_CREATED
-            )
-
-        else:
-            return Response(
-                {"message": "Cupon doesn't found or is expired"},
-                status=status.HTTP_404_NOT_FOUND
             )
 
 
@@ -457,6 +552,24 @@ class KhaltiVerifyAPIView(CreateAPIView):
 
     def get(self, request, *args, **kwargs):
         return self._verify(request.query_params)
+    
+
+class SearchCourseView(ListAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        search = self.request.query_params.get('query', '').strip()
+
+        if search:
+            return self.queryset.filter(
+                platform_status="Published",
+                teacher_course_status="Published",
+            ).filter(Q(title__icontains=search) | Q(description__icontains=search))
+
+        return self.queryset.none()
+    
     
 
             

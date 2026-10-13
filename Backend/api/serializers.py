@@ -100,6 +100,9 @@ class CartOrderItemSerializer(serializers.ModelSerializer):
             "coupons", "applied_coupon", "order_item_id", "created_date", "updated_date",
             "order_id", "payment_status",
         ]
+        depth= 3
+        
+    
 
 
 class CartOrderSerializer(serializers.ModelSerializer):
@@ -112,6 +115,12 @@ class CartOrderSerializer(serializers.ModelSerializer):
             "saved", "payment_status", "full_name", "email", "country", "coupons",
             "stripe_session_id", "order_id", "created_date", "updated_date", "order_items",
         ]
+        depth=4
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        self.Meta.depth = 4 if request and request.method == "GET" else 0
 
 
 class EnrolledCourseSerializer(serializers.ModelSerializer):
@@ -148,7 +157,6 @@ class CourseSerializer(serializers.ModelSerializer):
             "curriculum", "lectures", "average_rating", "rating_count", "reviews",
         ]
 
-        depth = 0
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
