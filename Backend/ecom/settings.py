@@ -46,11 +46,10 @@ INSTALLED_APPS = [
 
     #custom apps
     'api',
-    'store',
-    'customer',
-    'vendor',
     'userauths',
     'khalti',
+    'student',
+    'teacher',
 
     #third party apps
     'corsheaders',

@@ -29,6 +29,12 @@ const getErrorMessage = (error, fallback = "Something went wrong") => {
   return fallback;
 };
 
+export const getDashboardPath = (role) => {
+  if (role === "student") return "/student-dashboard";
+  if (role === "teacher") return "/teacher-dashboard";
+  return "/home";
+};
+
 export const login = async (email, password) => {
   try {
     const { data, status } = await api.post("token/", {
@@ -42,6 +48,7 @@ export const login = async (email, password) => {
         id: data.id,
         full_name: data.full_name,
         email: data.email,
+        role: data.role,
       };
 
       // Store user in Zustand
@@ -80,6 +87,7 @@ export const Register = async (
   full_name,
   email,
   phone,
+  role,
   password,
   password2
 ) => {
@@ -88,6 +96,7 @@ export const Register = async (
       full_name,
       email,
       phone,
+      role,
       password,
       password2,
     });
@@ -142,6 +151,7 @@ export const setUser = async () => {
       full_name: tokenData.full_name,
       email: tokenData.email,
       username: tokenData.username,
+      role: tokenData.role,
     };
 
     if (isAccessTokenExpired(accessToken)) {

@@ -3,6 +3,12 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
 from .models import Profile, User
 
+
+def get_user_role(user):
+    profile, _ = Profile.objects.get_or_create(user=user)
+    return profile.role
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model=User
@@ -29,6 +35,7 @@ class MyTokenObtainPariSerializer(TokenObtainPairSerializer):
         token["full_name"]=user.full_name
         token["email"]=user.email
         token["username"]=user.username
+        token["role"]=get_user_role(user)
         try:
             token['vendor_id']=user.verdor.id
         except:
@@ -41,9 +48,18 @@ class MyTokenObtainPariSerializer(TokenObtainPairSerializer):
         data["full_name"]=self.user.full_name
         data["email"]=self.user.email
         data["phone"]=self.user.phone
+        data["role"]=get_user_role(self.user)
         return data
     
 class RegisterSerializer(serializers.ModelSerializer):
+
+    role = serializers.ChoiceField(
+        choices=[
+            choice for choice in Profile.ROLE_CHOICES if choice[0] != "admin"
+        ],
+        required=True,
+        write_only=True,
+    )
 
     password = serializers.CharField(
         write_only=True,
@@ -58,7 +74,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["full_name", "email", "phone", "password", "password2"]
+        fields = ["full_name", "email", "phone", "role", "password", "password2"]
 
     def validate(self, attrs):
         
@@ -70,15 +86,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        role = validated_data.pop("role")
+        password = validated_data.pop("password")
+        validated_data.pop("password2")
 
-        user = User.objects.create(
-            full_name=validated_data["full_name"],
-            email=validated_data["email"],
-            phone=validated_data["phone"]
-        )
+        user = User.objects.create(**validated_data)
 
-        user.set_password(validated_data["password"])
+        user.set_password(password)
         user.save()
+        Profile.objects.update_or_create(user=user, defaults={"role": role})
 
         return user
     

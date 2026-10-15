@@ -9,7 +9,7 @@ urlpatterns = [
    path('reset-password-email/<email>/',auth_views.PasswordResetEmailVerification.as_view(),name="password-reset-email"),
    path('reset-password/',auth_views.PasswordResetView.as_view(),name="password-reset"),
    
-   #core routes
+   # cart,checkout,product detail and payment routes
    path('course/category/',CategoryListAPIView.as_view(),name="category-list"),
    path('course/course-list/',CourseListAPIView.as_view(),name="course-list"),
    path('course/course-detail/<slug>/',CourseDetailAPIView.as_view(),name="course-detail"),
@@ -23,4 +23,7 @@ urlpatterns = [
   path('course/order-update/<order_id>/',CreateOrUpdateOrderAPIView.as_view(),name="order-update"),
   path('course/apply-coupon/',CuponApplyAPIView.as_view(),name="apply-coupon"),
   path('khalti/', include('khalti.urls')),
+  
+  
+  
 ]

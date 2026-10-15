@@ -41,7 +41,13 @@ class User(AbstractUser):
 
 
 class Profile(models.Model):
-
+    
+    ROLE_CHOICES=(
+        ("student","Student"),
+        ("teacher","Teacher"),
+        ("admin","Admin"),
+    )
+    
     gender_choice = (
         ("Male", "Male"),
         ("Female", "Female"),
@@ -59,7 +65,9 @@ class Profile(models.Model):
     )
 
     full_name = models.CharField(max_length=100, null=True, blank=True)
-
+    
+    role=models.CharField(max_length=20, choices=ROLE_CHOICES,default="student")
+    
     about = models.TextField(null=True, blank=True)
 
     gender = models.CharField(

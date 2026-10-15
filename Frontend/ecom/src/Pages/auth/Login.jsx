@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Pagewrapper from "../Pagewrapper";
-import { login } from "../../utils/auth";
+import { getDashboardPath, login } from "../../utils/auth";
 import toast from "react-hot-toast";
 import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
@@ -12,6 +12,7 @@ const Login = () => {
   const navigate = useNavigate();
   const loading = userAuthStore((state) => state.loading);
   const isLoggedIn = userAuthStore((state) => state.isLoggedIn);
+  const userData = userAuthStore((state) => state.userData);
 
   const [formData, setForm] = useState({
     email: "",
@@ -34,9 +35,9 @@ const Login = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigate("/dashboard");
+      navigate(getDashboardPath(userData?.role), { replace: true });
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, userData?.role]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,7 +66,7 @@ const Login = () => {
       );
 
       handleResetFrom();
-      navigate("/dashboard");
+      navigate(getDashboardPath(user.role), { replace: true });
     } catch {
       toast.error("Unable to connect to the server");
     } finally {

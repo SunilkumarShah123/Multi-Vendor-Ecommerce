@@ -31,6 +31,7 @@ const Header = () => {
   const { cartCount, setCartCount } = useContext(CartCountCreater);
   const [search, setSearch] = useState("");
   const isLoggedIn = userAuthStore((state) => state.isLoggedIn);
+  const userRole = userAuthStore((state) => state.userData?.role);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -44,7 +45,6 @@ const Header = () => {
           `course/cart-list/${getCartId()}`
         );
         setCartCount(response?.data?.length);
-        console.log("cart-count", response.data.length);
       } catch (error) {
         setCartCount(0);
         console.log(error?.response?.data?.message || error.message);
@@ -106,7 +106,7 @@ const Header = () => {
                 </Link>
               </li>
 
-              {/* Instructor Dropdown */}
+              {(userRole === "teacher" || userRole === "admin") && (
               <li className="nav-item dropdown">
                 <Link
                   className="nav-link dropdown-toggle d-flex align-items-center"
@@ -120,7 +120,7 @@ const Header = () => {
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-start">
                   <li>
-                    <Link className="dropdown-item" to="#">
+                    <Link className="dropdown-item" to="/teacher-dashboard">
                       <MdDashboard className="me-2" />
                       Dashboard
                     </Link>
@@ -176,8 +176,10 @@ const Header = () => {
                   </li>
                 </ul>
               </li>
+              )}
 
               {/* Student Dropdown */}
+              {(userRole === "student" || userRole === "admin") && (
               <li className="nav-item dropdown">
                 <Link
                   className="nav-link dropdown-toggle d-flex align-items-center"
@@ -191,7 +193,7 @@ const Header = () => {
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-start">
                   <li>
-                    <Link className="dropdown-item" to="#">
+                    <Link className="dropdown-item" to="/student-dashboard">
                       <MdDashboard className="me-2" />
                       Dashboard
                     </Link>
@@ -228,6 +230,7 @@ const Header = () => {
                   </li>
                 </ul>
               </li>
+              )}
             </ul>
 
             {/* Right Side: Search + Buttons */}

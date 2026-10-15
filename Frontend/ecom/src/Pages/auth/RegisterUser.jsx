@@ -4,16 +4,19 @@ import { Register } from "../../utils/auth";
 import { useNavigate, Link } from "react-router-dom";
 import userAuthStore from "../../store/auth";
 import toast from "react-hot-toast";
+import { getDashboardPath } from "../../utils/auth";
 
 const RegisterUser = () => {
   const navigate = useNavigate();
   const isLoggedIn = userAuthStore((state) => state.isLoggedIn);
+  const userData = userAuthStore((state) => state.userData);
   const loading = userAuthStore((state) => state.loading);
 
   const [formData, setForm] = useState({
     full_name: "",
     email: "",
     phone: "",
+    role: "",
     password: "",
     password2: "",
   });
@@ -30,6 +33,7 @@ const RegisterUser = () => {
       full_name: "",
       email: "",
       phone: "",
+      role: "",
       password: "",
       password2: "",
     });
@@ -37,9 +41,9 @@ const RegisterUser = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigate("/home");
+      navigate(getDashboardPath(userData?.role), { replace: true });
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, userData?.role]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,6 +61,7 @@ const RegisterUser = () => {
         formData.full_name,
         formData.email,
         formData.phone,
+        formData.role,
         formData.password,
         formData.password2
       );
@@ -68,7 +73,7 @@ const RegisterUser = () => {
 
       toast.success("Registration successful. You are now logged in.");
       handleResetFrom();
-      navigate("/dashboard");
+      navigate(getDashboardPath(formData.role), { replace: true });
     } catch {
       toast.error("Unable to connect to the server");
     } finally {
@@ -132,6 +137,26 @@ const RegisterUser = () => {
                       value={formData.phone}
                       onChange={handleChange}
                     />
+                  </div>
+
+                  <div>
+                    <label htmlFor="role" className="form-label">
+                      Register as
+                    </label>
+                    <select
+                      id="role"
+                      name="role"
+                      className="form-select"
+                      value={formData.role}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="" disabled>
+                        Choose your profile
+                      </option>
+                      <option value="student">Student</option>
+                      <option value="teacher">Teacher</option>
+                    </select>
                   </div>
 
                   <div>

@@ -47,5 +47,10 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
       path("ckeditor5/", include("django_ckeditor_5.urls")),
+      path('teacher/',include('teacher.urls')),
+      path('student',include('student.urls')),
+      
+      
+      
 
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

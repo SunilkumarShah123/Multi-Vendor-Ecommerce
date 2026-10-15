@@ -27,7 +27,6 @@ const Home = () => {
     try {
       const res = await apiInstance.get("/course/course-list/");
       setCourse(res.data);
-      console.log(res.data);
     } catch (error) {
       console.error(error);
       toast.error(error.message);

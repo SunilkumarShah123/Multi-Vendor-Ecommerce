@@ -2,14 +2,14 @@ import {create} from "zustand"
 
 
 const userAuthStore= create((set,get)=>({ 
-    allUserData:null,
+    userData:null,
   isLoggedIn:false,
     loading:false,
     user: ()=>({
-      user_id:get().allUserData?.user_id||null,
-      username:get().allUserData?.username||null,
+      user_id:get().userData?.user_id||null,
+      username:get().userData?.username||null,
     }),
-    setUser: (user => set({allUserData:user, isLoggedIn:user !== null})),
+    setUser: (user => set({userData:user, isLoggedIn:user !== null})),
     setLoading: ( loading => set({loading:loading})),
 }))
 

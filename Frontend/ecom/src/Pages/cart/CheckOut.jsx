@@ -3,7 +3,7 @@ import "../../Css/pages/checkout.css";
 import toast from "react-hot-toast";
 import { CartCountCreater } from "../../utils/cart_plugins/UseCartCount";
 import { useContext } from "react";
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useParams, useSearchParams } from "react-router-dom";
 import "../../Css/pages/cart.css";
@@ -22,7 +22,7 @@ const CheckOut = () => {
   })
   const navigate = useNavigate();
 
-  const clearPaidCheckoutState = (orderId) => {
+  const clearPaidCheckoutState = useCallback((orderId) => {
     localStorage.removeItem("randomCartId");
     localStorage.removeItem("checkoutBioData");
     if (localStorage.getItem("editingOrderId") === orderId) {
@@ -31,7 +31,7 @@ const CheckOut = () => {
     setCartCount(0);
     setOrder(null);
     navigate("/cart", { replace: true });
-  };
+  }, [navigate, setCartCount]);
 
   const fetchOrder = async () => {
     try {
@@ -74,12 +74,17 @@ const CheckOut = () => {
     }
     if (payment === "success") {
       toast.success("Payment verified successfully. A receipt has been emailed to you.");
+      if (param.order_id) {
+        cleanedPaidOrderIds.current.add(param.order_id);
+        clearPaidCheckoutState(param.order_id);
+        return;
+      }
     } else {
       toast.error("Khalti payment was canceled or could not be verified.");
     }
     searchParams.delete("payment");
     setSearchParams(searchParams, { replace: true });
-  }, [searchParams, setSearchParams]);
+  }, [clearPaidCheckoutState, param.order_id, searchParams, setSearchParams]);
 
   const payWithKhalti = async () => {
     if (!param.order_id) {
