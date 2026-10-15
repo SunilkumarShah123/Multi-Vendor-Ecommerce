@@ -9,8 +9,9 @@ from django.core.mail import send_mail
 from rest_framework import status
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from ecom import settings
 import uuid
+
+from django.conf import settings as django_settings
 from .serializers import *
 
 
@@ -65,7 +66,7 @@ class PasswordResetEmailVerification(RetrieveAPIView):
 
                 If you did not request this, you can ignore this email.
                 """,
-                from_email=settings.DEFAULT_FROM_EMAIL,
+                from_email=django_settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
             )
         return user

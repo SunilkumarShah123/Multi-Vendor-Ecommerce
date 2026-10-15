@@ -2,7 +2,6 @@ from decimal import Decimal
 
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from khalti_payment.views import KhaltiPaymentError, initiate_payment, verify_payment
 
 from .serializers import *
 from rest_framework.mixins import UpdateModelMixin
@@ -24,7 +23,6 @@ from .models import *
 
 @transaction.atomic
 def finalize_paid_order(order):
-    """Create the enrollment and teacher notification for each paid item."""
     enrollments = []
 
     for order_item in order.order.select_related("course", "teacher"):
@@ -261,7 +259,11 @@ class CreateOrUpdateOrderAPIView(CreateAPIView, UpdateModelMixin):
 
         # order created based on the information came from front end
         order = CartOrder.objects.create(
-            full_name=full_name, email=email, country=country, student=user
+            full_name=full_name,
+            email=email,
+            country=country,
+            student=user,
+            cart_id=cart_id,
         )
         # now creating the differnt orderitems for specific order id based on different cart items in the cart by iterating over the cart items in the created cart
         total_price = Decimal("0")
@@ -350,7 +352,7 @@ class CreateOrUpdateOrderAPIView(CreateAPIView, UpdateModelMixin):
                     )
                 updated_items.append(order_item)
 
-            serializer.save()
+            serializer.save(cart_id=cart_id)
             order.sub_total = sum(
                 (item.total - item.tax_fee for item in updated_items),
                 Decimal("0"),
@@ -371,6 +373,7 @@ class CreateOrUpdateOrderAPIView(CreateAPIView, UpdateModelMixin):
                     "tax_fee",
                     "initial_total",
                     "total",
+                    "cart_id",
                     "updated_date",
                 ]
             )
@@ -456,103 +459,6 @@ class CuponApplyAPIView(CreateAPIView):
                 status=status.HTTP_201_CREATED
             )
 
-
-class KhaltiInitiateAPIView(CreateAPIView):
-    permission_classes = [AllowAny]
-
-    def create(self, request, *args, **kwargs):
-        order_id = request.data.get("order_id")
-        if not order_id:
-            return Response(
-                {"detail": "order_id is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        order = get_object_or_404(CartOrder, order_id=order_id)
-        if order.payment_status == "paid":
-            return Response(
-                {"detail": "This order has already been paid."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            response_data = initiate_payment(
-                order_id=order.order_id,
-                amount=order.total,
-                customer_name=order.full_name,
-                customer_email=order.email,
-            )
-        except KhaltiPaymentError as error:
-            if error.response_data is not None:
-                return Response(error.response_data, status=error.status_code)
-            return Response(
-                {"detail": str(error)},
-                status=error.status_code,
-            )
-
-        return Response(response_data, status=status.HTTP_200_OK)
-
-class KhaltiVerifyAPIView(CreateAPIView):
-    permission_classes = [AllowAny]
-    
-    
-    def create(self, request, *args, **kwargs):
-        return self._verify(request.data)
-
-    def _verify(self, request_data):
-        pidx = request_data.get("pidx")
-        requested_order_id = request_data.get("order_id")
-        if not pidx:
-            return Response(
-                {"detail": "pidx is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            response_data = verify_payment(pidx)
-        except KhaltiPaymentError as error:
-            if error.response_data is not None:
-                return Response(error.response_data, status=error.status_code)
-            return Response(
-                {"detail": str(error)},
-                status=error.status_code,
-            )
-
-        khalti_order_id = response_data.get("purchase_order_id")
-        if requested_order_id and requested_order_id != khalti_order_id:
-            return Response(
-                {"detail": "Payment does not belong to this order."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        order = get_object_or_404(CartOrder, order_id=khalti_order_id)
-        expected_amount = int((Decimal(order.total) * 100).quantize(Decimal("1")))
-        if response_data.get("amount") != expected_amount:
-            return Response(
-                {"detail": "Payment amount does not match the order total."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if response_data.get("status") != "Completed":
-            return Response(
-                {"detail": "Payment has not completed.", "payment": response_data},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        with transaction.atomic():
-            order.payment_status = "paid"
-            order.save(update_fields=["payment_status", "updated_date"])
-            enrollments = finalize_paid_order(order)
-        return Response(
-            {
-                "message": "Payment verified successfully.",
-                "order_id": order.order_id,
-                "enrollment_ids": [enrollment.enrollment_id for enrollment in enrollments],
-            },
-            status=status.HTTP_200_OK,
-        )
-
-    def get(self, request, *args, **kwargs):
-        return self._verify(request.query_params)
-    
 
 class SearchCourseView(ListAPIView):
     queryset = Course.objects.all()

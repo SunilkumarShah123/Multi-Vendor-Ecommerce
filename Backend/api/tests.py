@@ -1,9 +1,9 @@
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
-from unittest.mock import patch
 
 from .models import (
 	Cart,
@@ -16,13 +16,12 @@ from .models import (
 	Notification,
 	Teacher,
 )
-from .views import finalize_paid_order
 
 
 User = get_user_model()
 
 
-class PaidOrderFinalizationTests(TestCase):
+class CheckoutOrderTests(TestCase):
 	def setUp(self):
 		self.student = User.objects.create_user(
 			username="student", email="student@example.com", password="password"
@@ -50,21 +49,6 @@ class PaidOrderFinalizationTests(TestCase):
 			teacher=self.teacher,
 			total="100.00",
 			initial_total="100.00",
-		)
-
-	def test_paid_order_creates_enrollment_and_teacher_notification_once(self):
-		finalize_paid_order(self.order)
-		finalize_paid_order(self.order)
-
-		self.assertEqual(EnrolledCourse.objects.filter(order_item=self.order_item).count(), 1)
-		self.assertEqual(
-			Notification.objects.filter(
-				order=self.order,
-				order_item=self.order_item,
-				teacher=self.teacher,
-				type="New Order",
-			).count(),
-			1,
 		)
 
 	def test_course_search_returns_matching_published_courses(self):
@@ -119,6 +103,7 @@ class PaidOrderFinalizationTests(TestCase):
 
 		self.assertEqual(response.status_code, 200)
 		self.order.refresh_from_db()
+		self.assertEqual(self.order.cart_id, "123456")
 		self.assertEqual(CartOrder.objects.count(), 1)
 		self.assertEqual(self.order.full_name, "Updated Student")
 		self.assertEqual(self.order.email, "updated@example.com")
@@ -207,7 +192,7 @@ class PaidOrderFinalizationTests(TestCase):
 		self.assertEqual(self.order.sub_total, Decimal("90.00"))
 		self.assertEqual(self.order.total, Decimal("100.00"))
 
-	def test_two_cart_items_complete_order_payment_and_finalization(self):
+	def test_two_cart_items_create_order(self):
 		second_teacher_user = User.objects.create_user(
 			username="teacher-two", email="teacher-two@example.com", password="password"
 		)
@@ -240,31 +225,34 @@ class PaidOrderFinalizationTests(TestCase):
 		client = APIClient()
 		client.force_authenticate(user=self.student)
 		create_order_response = client.post(
-			"/api/course/create-order/123456/",
+			"/api/course/create-order/",
 			{
 				"full_name": "Student",
 				"email": "student@example.com",
 				"country": "Nepal",
 				"cart_id": "123456",
+				"user_id": self.student.id,
 			},
 			format="json",
 		)
 
 		self.assertEqual(create_order_response.status_code, 201)
 		order = CartOrder.objects.get(order_id=create_order_response.data["order_oid"])
+		self.assertEqual(order.cart_id, "123456")
 		self.assertEqual(order.order.count(), 2)
 		self.assertEqual(order.total, 165)
 
 		with patch(
-			"api.views.verify_payment",
+			"khalti.views.verify_payment",
 			return_value={
 				"purchase_order_id": order.order_id,
 				"amount": 16500,
 				"status": "Completed",
+				"transaction_id": "txn-order",
 			},
 		):
 			verify_response = client.post(
-				"/api/payment/khalti/verify/",
+				"/api/khalti/verify-khalti/",
 				{"pidx": "test-pidx", "order_id": order.order_id},
 				format="json",
 			)

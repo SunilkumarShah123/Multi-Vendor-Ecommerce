@@ -112,7 +112,7 @@ class CartOrderItemAdmin(admin.ModelAdmin):
 
     def display_coupons(self, obj):
         return ", ".join(
-            c.title for c in obj.coupons.all()
+            c.code for c in obj.coupons.all()
         )
 
 

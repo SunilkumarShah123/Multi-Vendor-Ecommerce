@@ -306,6 +306,7 @@ class CartOrder(models.Model):
     coupons = models.ManyToManyField("api.Coupon", blank=True)
 
     stripe_session_id = models.CharField(max_length=1000, null=True, blank=True)
+    cart_id = models.CharField(max_length=20, blank=True, default="")
 
     order_id = ShortUUIDField( length=6, max_length=20, alphabet="1234567890",editable=False)
 

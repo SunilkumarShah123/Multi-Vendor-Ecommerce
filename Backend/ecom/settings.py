@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-import os
 from dotenv import load_dotenv
 from decouple import config
 
@@ -41,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'customer',
     'vendor',
     'userauths',
-    'khalti_payment',
+    'khalti',
 
     #third party apps
     'corsheaders',
@@ -59,7 +59,11 @@ INSTALLED_APPS = [
     "django_ckeditor_5",
     # 'rest_framework_simplejwt',
     #below is same as above but extra advantage is it is destroy the refresh token at the time user logout before it naturally expire protecting form stoling of refresh token
-    'rest_framework_simplejwt.token_blacklist'
+    'rest_framework_simplejwt.token_blacklist',
+
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
 
 
 ]
@@ -72,6 +76,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -116,6 +121,13 @@ DATABASES = {
 }
 
 AUTH_USER_MODEL= "userauths.User"
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
@@ -201,16 +213,13 @@ MAILERS = {
 
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
 
-KHALTI_SECRET_KEY = os.getenv("KHALTI_SECRET_KEY", "")
-KHALTI_API_URL = os.getenv("KHALTI_API_URL", "https://dev.khalti.com/api/v2")
-KHALTI_RETURN_URL = os.getenv(
+KHALTI_SECRET_KEY = config("KHALTI_SECRET_KEY", default="")
+KHALTI_API_URL = config("KHALTI_API_URL", default="https://a.khalti.com/api/v2")
+KHALTI_RETURN_URL = config(
     "KHALTI_RETURN_URL",
-    "http://127.0.0.1:8000/api/payment/khalti/verify/",
+    default="http://127.0.0.1:8000/api/khalti/verify-khalti/",
 )
-KHALTI_WEBSITE_URL = os.getenv(
-    "KHALTI_WEBSITE_URL",
-    "http://127.0.0.1:5173",
-)
+KHALTI_WEBSITE_URL = config("KHALTI_WEBSITE_URL", default="http://127.0.0.1:5173")
 
 
 #it was valid in pervious django version now now before 6.1
