@@ -1,6 +1,7 @@
 import "../Css/pages/home.css";
 import { FaHeart, FaCartPlus, FaLongArrowAltRight } from "react-icons/fa";
 import toast from "react-hot-toast";
+import Swal from "sweetalert2";
 import { useState, useEffect } from "react";
 import apiInstance from "../utils/axios";
 import Pagewrapper from "./Pagewrapper";
@@ -38,6 +39,15 @@ const Home = () => {
   }, []);
 
   const createCart = async (courseId, userId, price, countryName, cartId) => {
+    if (!userId) {
+      Swal.fire({
+        title: "Login required",
+        text: "You must log in to add this course to your cart.",
+        icon: "info",
+      });
+      return;
+    }
+
     const form = new FormData();
     form.append("course_id", courseId);
     form.append("user_id", userId);
@@ -163,7 +173,9 @@ const Home = () => {
                             cursor: "pointer",
                           }}
                           onClick={() =>
-                            navigate(`course-detail/${item.slug}`)
+                            navigate(`/course-detail/${item.slug}`, {
+                              replace:true
+                            })
                           }
                         />
                       </div>

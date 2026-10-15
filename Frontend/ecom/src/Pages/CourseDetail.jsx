@@ -7,17 +7,30 @@ import apiInstance from "../utils/axios";
 import Swal from "sweetalert2";
 import toast from "react-hot-toast";
 import useAxios from "../utils/useAxios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import userId from "../utils/cart_plugins/getUserId";
 import getCartId from "../utils/cart_plugins/generateCartId";
 import getUserCountry from "../utils/cart_plugins/getUserCountry";
+import { CartCountCreater } from "../utils/cart_plugins/UseCartCount";
 const CourseDetail = () => {
+  const { setCartCount } = useContext(CartCountCreater);
   const userCountry = getUserCountry();
   const { slug } = useParams();
   const [loading, setLoading] = useState(true);
   const slug_query = slug;
   const [course, setCourse] = useState({});
   const [addToCartButton, setAddToCartButton] = useState("Add To Cart");
+
+  async function fetchCount() {
+    try {
+      const response = await apiInstance.get(`course/cart-list/${getCartId()}`);
+      setCartCount(response?.data?.length);
+      console.log("cart-count", response.data.length);
+    } catch (error) {
+      setCartCount(0);
+      console.log(error?.response?.data?.message || error.message);
+    }
+  }
 
   const fetchCourse = async () => {
     setLoading(true);
@@ -27,13 +40,18 @@ const CourseDetail = () => {
       );
       setCourse(response.data);
 
-      const cartResponse = await apiInstance.get(
-        `course/cart-list/${getCartId()}/`,
-      );
-      const courseIsInCart = cartResponse.data.some(
-        (item) => item.course?.course_id === response.data.course_id,
-      );
-      setAddToCartButton(courseIsInCart ? "Added To Cart" : "Add To Cart");
+      if (userId()) {
+        const cartResponse = await apiInstance.get(
+          `course/cart-list/${getCartId()}/`,
+        );
+        const courseIsInCart = cartResponse.data.some(
+          (item) => item.course?.course_id === response.data.course_id,
+        );
+        setAddToCartButton(courseIsInCart ? "Added To Cart" : "Add To Cart");
+      } else {
+        setAddToCartButton("Add To Cart");
+      }
+      await fetchCount();
 
       console.log(response.data);
     } catch (error) {
@@ -67,12 +85,33 @@ const CourseDetail = () => {
         text: response?.data.message,
         icon: "success",
       });
+      await fetchCount();
       setAddToCartButton("Added To Cart");
     } catch (error) {
       toast.error("Something went wrong !!!!");
-      setAddToCartButton("Add to Cart");
+      setAddToCartButton("Add To Cart");
       console.log(error);
     }
+  };
+
+  const handleAddToCart = () => {
+    const authenticatedUserId = userId();
+    if (!authenticatedUserId) {
+      Swal.fire({
+        title: "Login required",
+        text: "You must log in to add this course to your cart.",
+        icon: "info",
+      });
+      return;
+    }
+
+    createCart(
+      course.course_id,
+      authenticatedUserId,
+      course.price,
+      userCountry,
+      getCartId(),
+    );
   };
   return (
   <>
@@ -475,15 +514,7 @@ const CourseDetail = () => {
                         {addToCartButton === "Add To Cart" && (
                           <button
                             className="btn btn-primary shadow-sm"
-                            onClick={() =>
-                              createCart(
-                                course.course_id,
-                                userId(),
-                                course.price,
-                                userCountry,
-                                getCartId()
-                              )
-                            }
+                            onClick={handleAddToCart}
                           >
                             <i className="fa fa-cart-shopping me-2"></i>
                             Add To Cart

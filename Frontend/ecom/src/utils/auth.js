@@ -76,7 +76,6 @@ export const login = async (email, password) => {
   }
 };
 
-
 export const Register = async (
   full_name,
   email,

@@ -3,31 +3,57 @@ import "../../Css/pages/checkout.css";
 import toast from "react-hot-toast";
 import { CartCountCreater } from "../../utils/cart_plugins/UseCartCount";
 import { useContext } from "react";
-import { useState, useEffect } from "react";
-import userId from "../../utils/cart_plugins/getUserId";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import "../../Css/pages/cart.css";
 import apiInstance from "../../utils/axios";
 import Pagewrapper from "../Pagewrapper";
 
 const CheckOut = () => {
   const [order, setOrder] = useState(null);
+  const { setCartCount } = useContext(CartCountCreater);
   const param = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [paying, setPaying] = useState(false);
+  const cleanedPaidOrderIds = useRef(new Set());
   const [cupon,setCupon]=useState({
     cupon:'',
   })
   const navigate = useNavigate();
+
+  const clearPaidCheckoutState = (orderId) => {
+    localStorage.removeItem("randomCartId");
+    localStorage.removeItem("checkoutBioData");
+    if (localStorage.getItem("editingOrderId") === orderId) {
+      localStorage.removeItem("editingOrderId");
+    }
+    setCartCount(0);
+    setOrder(null);
+    navigate("/cart", { replace: true });
+  };
+
   const fetchOrder = async () => {
     try {
       const response = await apiInstance.get(
         `course/order-checkout/${param.order_id}/`,
       );
-     console.log(response.data)
-      setOrder(response.data);
+      const fetchedOrder = response.data;
+      setOrder(fetchedOrder);
+
+      if (
+        fetchedOrder.payment_status?.toLowerCase() === "paid" &&
+        !cleanedPaidOrderIds.current.has(fetchedOrder.order_id)
+      ) {
+        cleanedPaidOrderIds.current.add(fetchedOrder.order_id);
+        clearPaidCheckoutState(fetchedOrder.order_id);
+        return;
+      }
 
       // Remember current editing order
-      localStorage.setItem("editingOrderId", response.data.order_id);
+      if (fetchedOrder.payment_status?.toLowerCase() !== "paid") {
+        localStorage.setItem("editingOrderId", fetchedOrder.order_id);
+      }
     } catch (error) {
       console.log(error?.response?.data?.message);
     }
@@ -40,6 +66,55 @@ const CheckOut = () => {
 
     fetchOrder();
   }, [param.order_id]);
+
+  useEffect(() => {
+    const payment = searchParams.get("payment");
+    if (!payment) {
+      return;
+    }
+    if (payment === "success") {
+      toast.success("Payment verified successfully. A receipt has been emailed to you.");
+    } else {
+      toast.error("Khalti payment was canceled or could not be verified.");
+    }
+    searchParams.delete("payment");
+    setSearchParams(searchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const payWithKhalti = async () => {
+    if (!param.order_id) {
+      toast.error("Order not found.");
+      return;
+    }
+    if (order?.payment_status?.toLowerCase() === "paid") {
+      toast.error("This order has already been paid.");
+      return;
+    }
+
+    setPaying(true);
+    try {
+      const response = await apiInstance.post(
+        "khalti/initiate-khalti-payment/",
+        { order_id: param.order_id },
+        { timeout: 20000 },
+      );
+      const paymentUrl = response.data?.payment_url;
+      if (!paymentUrl) {
+        toast.error("Unable to start Khalti payment.");
+        return;
+      }
+      window.location.href = paymentUrl;
+    } catch (error) {
+      const data = error?.response?.data;
+      toast.error(
+        data?.detail ||
+          data?.error_key ||
+          (typeof data === "string" ? data : "Unable to start Khalti payment. Please try again."),
+      );
+    } finally {
+      setPaying(false);
+    }
+  };
 
 const handleCuponChange=(e)=>{
   const {name,value}= e.target
@@ -298,23 +373,18 @@ initial_total}</span>
                   </div>
 
                   <div className="d-grid gap-2">
-                    <form action="#" method="POST">
-                      <button
-                        type="submit"
-                        className="btn btn-lg btn-success w-100 fw-bold shadow-sm"
-                        id="stripeBtn"
-                      >
-                        Pay With Stripe
-                      </button>
-                    </form>
+                
 
                     <button
                       type="button"
-                      className="btn btn-lg btn-warning w-100 fw-bold shadow-sm text-dark"
-                      disabled
+                      className="btn btn-lg btn-purple w-100 fw-bold shadow-sm"
+                      onClick={payWithKhalti}
+                      disabled={paying || order?.payment_status?.toLowerCase() === "paid"}
+                      style={{ backgroundColor: "#5C2D91", color: "#fff" }}
                     >
-                      <i className="fab fa-paypal me-2"></i> Pay with PayPal
+                      {paying ? "Redirecting to Khalti..." : "Pay with Khalti"}
                     </button>
+                  
                   </div>
 
                   <p className="small text-secondary mb-0 mt-3 text-center">

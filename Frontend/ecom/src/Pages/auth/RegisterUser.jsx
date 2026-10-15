@@ -8,7 +8,8 @@ import toast from "react-hot-toast";
 const RegisterUser = () => {
   const navigate = useNavigate();
   const isLoggedIn = userAuthStore((state) => state.isLoggedIn);
-  const loading=userAuthStore( state => state.loading)
+  const loading = userAuthStore((state) => state.loading);
+
   const [formData, setForm] = useState({
     full_name: "",
     email: "",
@@ -75,106 +76,131 @@ const RegisterUser = () => {
     }
   };
 
+  return (
+    <Pagewrapper>
+      <div className="container py-5">
+        <div className="row justify-content-center">
+          <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+            <div className="card shadow-sm border-0">
+              <div className="card-body p-4 p-md-5">
+                <h2 className="text-center mb-4 fw-bold">Register</h2>
 
-return (
-  <Pagewrapper>
+                <form
+                  onSubmit={handleSubmit}
+                  className="d-flex flex-column gap-3"
+                >
+                  <div>
+                    <label htmlFor="full_name" className="form-label">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      id="full_name"
+                      name="full_name"
+                      className="form-control"
+                      placeholder="Enter Your Full Name"
+                      value={formData.full_name}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-  <div className="container">
-    <h1 className="my-5 text-center">Register Page</h1>
-    <form
-      onSubmit={handleSubmit}
-      className="d-flex flex-column my-4 mx-auto"
-      style={{ maxWidth: "500px" }}
-    >
-      <label htmlFor="full_name" className="form-label">
-        Full Name:
-      </label>
-      <input
-        type="text"
-        id="full_name"
-        name="full_name"
-        className="form-control mb-3"
-        placeholder="Enter Your Full Name"
-        value={formData.full_name}
-        onChange={handleChange}
-      />
+                  <div>
+                    <label htmlFor="email" className="form-label">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      className="form-control"
+                      placeholder="Enter Your Email"
+                      value={formData.email}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-      <label htmlFor="email" className="form-label">
-        Email:
-      </label>
-      <input
-        type="email"
-        id="email"
-        name="email"
-        className="form-control mb-3"
-        placeholder="Enter Your Email"
-        value={formData.email}
-        onChange={handleChange}
-      />
+                  <div>
+                    <label htmlFor="phone" className="form-label">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      className="form-control"
+                      placeholder="Enter Your Number"
+                      value={formData.phone}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-      <label htmlFor="phone" className="form-label">
-        Phone:
-      </label>
-      <input
-        type="tel"
-        id="phone"
-        name="phone"
-        className="form-control mb-3"
-        placeholder="Enter Your Number"
-        value={formData.phone}
-        onChange={handleChange}
-      />
+                  <div>
+                    <label htmlFor="password" className="form-label">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      className="form-control"
+                      placeholder="Enter Your Password"
+                      value={formData.password}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-      <label htmlFor="password" className="form-label">
-        Password:
-      </label>
-      <input
-        type="password"
-        id="password"
-        name="password"
-        className="form-control mb-3"
-        placeholder="Enter Your Password"
-        value={formData.password}
-        onChange={handleChange}
-      />
+                  <div>
+                    <label htmlFor="password2" className="form-label">
+                      Confirm Password
+                    </label>
+                    <input
+                      type="password"
+                      id="password2"
+                      name="password2"
+                      className="form-control"
+                      placeholder="Confirm Your Password"
+                      value={formData.password2}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-      <label htmlFor="password2" className="form-label">
-        Confirm Password:
-      </label>
-      <input
-        type="password"
-        id="password2"
-        name="password2"
-        className="form-control mb-3"
-        placeholder="Enter Your Confirm Password"
-        value={formData.password2}
-        onChange={handleChange}
-      />
+                  {loading ? (
+                    <button
+                      className="btn btn-danger w-100 mt-2"
+                      type="submit"
+                      disabled
+                    >
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      Registering...
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-danger w-100 mt-2"
+                      type="submit"
+                    >
+                      Register
+                    </button>
+                  )}
 
-      {loading ? (<button className="btn btn-success mt-3" type="submit" disabled>
-        <span className="spinner-border spinner-border-sm me-2"></span>
-        Registering ...
-      </button>):(<button className="btn btn-danger mt-3" type="submit">
-          Register
-      </button>)
-      }
+                  <div className="text-center mt-2">
+                    <span className="small">Already have an account?</span>
+                    <Link
+                      to="/login"
+                      className="text-decoration-none ms-1 small text-danger"
+                    >
+                      Login!
+                    </Link>
+                  </div>
 
-      <div className="mt-3 text-center">
-        <span>Already have an account?</span>
-        <Link
-          className="text-decoration-none ms-1"
-          onClick={() => navigate("/login")}
-        >
-          Login !
-        </Link>
+                
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </form>
-  </div>
-  </Pagewrapper>
-);
-
-
+    </Pagewrapper>
+  );
 };
 
 export default RegisterUser;
-
